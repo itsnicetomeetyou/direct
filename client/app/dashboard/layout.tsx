@@ -21,15 +21,9 @@ function filterNavItems(items: NavItem[], allowedTabs: string[]): NavItem[] {
       const isAllowed = allowedTabs.includes(item.label || '');
 
       if (item.children) {
-        // For parent items (like Settings), check if parent is allowed
         const filteredChildren = item.children.filter(
           (child) => allowedTabs.includes(child.label || '')
         );
-        // Show parent if it has children AND parent label is allowed
-        if (filteredChildren.length > 0 && isAllowed) {
-          return { ...item, children: filteredChildren };
-        }
-        // If parent not explicitly controlled but has children, show it
         if (filteredChildren.length > 0) {
           return { ...item, children: filteredChildren };
         }
@@ -46,10 +40,19 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const session = await auth();
-  const role = (session?.user as any)?.role || 'ADMIN';
-  const allowedTabs = await getPermissionsForRole(role);
-  const filteredItems = filterNavItems(navItems, allowedTabs);
+  let filteredItems = navItems;
+
+  try {
+    const session = await auth();
+    const role = (session?.user as any)?.role || 'ADMIN';
+    const allowedTabs = await getPermissionsForRole(role);
+    if (allowedTabs && allowedTabs.length > 0) {
+      filteredItems = filterNavItems(navItems, allowedTabs);
+    }
+  } catch (error) {
+    // If permissions can't be loaded, show all nav items (fallback)
+    console.error('Failed to load role permissions:', error);
+  }
 
   return (
     <div className="flex">

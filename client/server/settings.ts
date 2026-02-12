@@ -224,9 +224,23 @@ export async function getPermissionsForRole(role: string) {
   const permissions = await prisma.rolePermission.findMany({
     where: { role: role as any }
   });
-  // If no permissions configured yet, ADMIN gets everything
-  if (permissions.length === 0 && role === 'ADMIN') {
-    return ALL_TAB_KEYS;
+
+  // Build a map of configured permissions
+  const permMap = new Map(permissions.map((p) => [p.tabKey, p.canAccess]));
+
+  // For any tab key NOT yet configured in DB:
+  // - ADMIN defaults to allowed (true)
+  // - Other roles default to denied (false)
+  const allowedTabs: string[] = [];
+  for (const tabKey of ALL_TAB_KEYS) {
+    const configured = permMap.get(tabKey);
+    if (configured !== undefined) {
+      if (configured) allowedTabs.push(tabKey);
+    } else {
+      // Not configured yet - default based on role
+      if (role === 'ADMIN') allowedTabs.push(tabKey);
+    }
   }
-  return permissions.filter((p) => p.canAccess).map((p) => p.tabKey);
+
+  return allowedTabs;
 }
