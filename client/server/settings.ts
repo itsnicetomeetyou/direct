@@ -148,6 +148,19 @@ export async function toggleOrderStatus(id: string, isActive: boolean) {
   return status;
 }
 
+export async function createOrderStatus(name: string) {
+  const status = await prisma.orderStatusSetting.create({
+    data: { name: name.toUpperCase().replace(/\s+/g, ''), isActive: true }
+  });
+  revalidatePath('/dashboard/settings/order-status');
+  return status;
+}
+
+export async function deleteOrderStatus(id: string) {
+  await prisma.orderStatusSetting.delete({ where: { id } });
+  revalidatePath('/dashboard/settings/order-status');
+}
+
 export async function seedOrderStatuses() {
   const defaults = [
     { name: 'PENDING', isActive: true },
