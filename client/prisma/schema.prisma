@@ -94,6 +94,38 @@ model DocumentSelected {
   user               Users            @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+model PaymentOptionSetting {
+  id          String   @id @default(uuid()) @db.VarChar(36)
+  name        String   @unique
+  isActive    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model ShippingOptionSetting {
+  id          String   @id @default(uuid()) @db.VarChar(36)
+  name        String   @unique
+  isActive    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model ScheduleConfig {
+  id               String   @id @default(uuid()) @db.VarChar(36)
+  maxSlotsPerDay   Int      @default(300)
+  minDaysAdvance   Int      @default(3)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model Holiday {
+  id        String   @id @default(uuid()) @db.VarChar(36)
+  date      DateTime
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 enum Role {
   STUDENT
   ADMIN
@@ -111,6 +143,8 @@ enum PaymentOptions {
   PAYPAL
   CREDITCARD
   WALKIN
+  PORTAL_GENERATED
+  ATTACHED_FILE
 }
 
 enum DeliveryOptions {

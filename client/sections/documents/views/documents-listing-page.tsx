@@ -13,7 +13,7 @@ import { fetchDocuments } from '@/server/document';
 
 const breadcrumbItems = [
   { title: 'Dashboard', link: '/dashboard' },
-  { title: 'Documents', link: '/dashboard/documents' }
+  { title: 'Transactions List', link: '/dashboard/documents' }
 ];
 
 type TDocumentListingPage = {};
@@ -37,7 +37,7 @@ export default async function DocumentsListingPage({}: TDocumentListingPage) {
         <Breadcrumbs items={breadcrumbItems} />
 
         <div className="flex items-start justify-between">
-          <Heading title={`Documents (${totalDocuments})`} description="Manage academic documents" />
+          <Heading title={`Transactions List (${totalDocuments})`} description="Manage Academic Document Transaction List" />
 
           <Link href={'/dashboard/documents/new'} className={cn(buttonVariants({ variant: 'default' }))}>
             <Plus className="mr-2 h-4 w-4" /> Add New

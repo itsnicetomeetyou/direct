@@ -176,70 +176,46 @@ export const navItems: NavItem[] = [
     label: 'Dashboard'
   },
   {
-    title: 'Documents',
+    title: 'Transaction',
     href: '/dashboard/documents',
-    icon: 'product',
-    label: 'documents'
+    icon: 'billing',
+    label: 'transaction'
   },
-  // {
-  //   title: 'Payment Options',
-  //   href: '/dashboard/payment',
-  //   icon: 'product',
-  //   label: 'payment'
-  // },
-  // {
-  //   title: 'Delivery Options',
-  //   href: '/dashboard/delivery',
-  //   icon: 'post',
-  //   label: 'delivery'
-  // },
   {
-    title: 'Request',
+    title: 'Transaction List',
     href: '/dashboard/request',
-    icon: 'product',
-    label: 'request'
+    icon: 'post',
+    label: 'transaction-list'
   },
-  // {
-  //   title: 'Employee',
-  //   href: '/dashboard/employee',
-  //   icon: 'user',
-  //   label: 'employee'
-  // },
-  // {
-  //   title: 'Product',
-  //   href: '/dashboard/product',
-  //   icon: 'product',
-  //   label: 'product'
-  // },
-  // {
-  //   title: 'Account',
-  //   icon: 'user',
-  //   label: 'account',
-  //   children: [
-  //     {
-  //       title: 'Profile',
-  //       href: '/dashboard/profile',
-  //       icon: 'userPen',
-  //       label: 'profile'
-  //     },
-  //     {
-  //       title: 'Login',
-  //       href: '/',
-  //       icon: 'login',
-  //       label: 'login'
-  //     }
-  //   ]
-  // },
+  {
+    title: 'Settings',
+    icon: 'settings',
+    label: 'settings',
+    children: [
+      {
+        title: 'Payment Options',
+        href: '/dashboard/settings/payment-options',
+        icon: 'billing',
+        label: 'payment-options'
+      },
+      {
+        title: 'Shipping Options',
+        href: '/dashboard/settings/shipping-options',
+        icon: 'product',
+        label: 'shipping-options'
+      },
+      {
+        title: 'Schedule Options',
+        href: '/dashboard/settings/schedule-options',
+        icon: 'page',
+        label: 'schedule-options'
+      }
+    ]
+  },
   {
     title: 'Logout',
     href: '#',
     icon: 'login',
     label: 'logout'
   }
-  // {
-  //   title: 'Kanban',
-  //   href: '/dashboard/kanban',
-  //   icon: 'kanban',
-  //   label: 'kanban'
-  // }
 ];
