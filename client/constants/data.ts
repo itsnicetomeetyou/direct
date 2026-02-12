@@ -209,6 +209,12 @@ export const navItems: NavItem[] = [
         href: '/dashboard/settings/schedule-options',
         icon: 'page',
         label: 'schedule-options'
+      },
+      {
+        title: 'User Management',
+        href: '/dashboard/settings/user-management',
+        icon: 'user',
+        label: 'user-management'
       }
     ]
   },
