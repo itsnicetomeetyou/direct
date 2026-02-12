@@ -1,8 +1,8 @@
 import { NextAuthConfig } from 'next-auth';
-import CredentialProvider from 'next-auth/providers/credentials';
-import { compare } from 'bcryptjs';
-import { PrismaAdapter } from '@auth/prisma-adapter';
-import { prisma } from '@/server/prisma';
+
+// This file is used by the middleware (Edge Runtime).
+// It must NOT import Prisma, bcryptjs, or any Node.js-only modules.
+// The full auth config (with providers, adapter) is in auth.ts.
 
 const authConfig = {
   secret: process.env.NEXTAUTH_SECRET,
@@ -16,45 +16,12 @@ const authConfig = {
         ...session.user,
         id: token.sub
       }
-    })
+    }),
+    authorized({ auth }) {
+      return !!auth;
+    }
   },
-  providers: [
-    CredentialProvider({
-      type: 'credentials',
-      credentials: {
-        email: {
-          type: 'email'
-        },
-        password: {
-          type: 'password'
-        }
-      },
-      async authorize(credentials, req) {
-        try {
-          const userData = await prisma.users.findFirst({
-            where: {
-              email: credentials.email ?? '',
-              role: 'ADMIN'
-            }
-          });
-          if (!userData) return null;
-
-          const checkPasswordCorrect = await compare(credentials.password as string, userData.password);
-          if (checkPasswordCorrect) {
-            return {
-              id: userData.id,
-              email: userData.email
-            };
-          } else {
-            return null;
-          }
-        } catch (err) {
-          return null;
-        }
-      }
-    })
-  ],
-  adapter: PrismaAdapter(prisma),
+  providers: [],
   pages: {
     signIn: '/',
     error: '/'
