@@ -2,7 +2,7 @@ import { Breadcrumbs } from '@/components/breadcrumbs';
 import PageContainer from '@/components/layout/page-container';
 import { Heading } from '@/components/ui/heading';
 import { Separator } from '@/components/ui/separator';
-import { fetchPaymentOptions, seedPaymentOptions } from '@/server/settings';
+import { seedPaymentOptions } from '@/server/settings';
 import PaymentOptionsClient from './payment-options-client';
 
 const breadcrumbItems = [

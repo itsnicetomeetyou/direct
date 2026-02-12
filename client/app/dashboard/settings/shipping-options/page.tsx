@@ -2,7 +2,7 @@ import { Breadcrumbs } from '@/components/breadcrumbs';
 import PageContainer from '@/components/layout/page-container';
 import { Heading } from '@/components/ui/heading';
 import { Separator } from '@/components/ui/separator';
-import { fetchShippingOptions, seedShippingOptions } from '@/server/settings';
+import { seedShippingOptions } from '@/server/settings';
 import ShippingOptionsClient from './shipping-options-client';
 
 const breadcrumbItems = [
