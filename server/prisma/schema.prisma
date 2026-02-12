@@ -1,0 +1,135 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Users {
+  id               String             @id @default(uuid()) @db.VarChar(36)
+  emailVerified    Boolean            @default(false)
+  email            String             @unique
+  password         String
+  role             Role               @default(STUDENT)
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  DocumentSelected DocumentSelected[]
+  RequestDocuments RequestDocuments[]
+  UserInformation  UserInformation?
+}
+
+model UserInformation {
+  id           String   @id @default(uuid()) @db.VarChar(36)
+  firstName    String
+  middleName   String?
+  lastName     String
+  studentNo    String
+  specialOrder String?
+  lrn          String
+  address      String   @db.Text
+  userId       String   @unique @db.VarChar(36)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  phoneNo      String
+  users        Users    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Documents {
+  id               String             @id @default(uuid()) @db.VarChar(36)
+  name             String
+  price            Decimal            @db.Decimal(10, 2)
+  dayBeforeRelease Int                @default(3)
+  isAvailable      Boolean            @default(false)
+  eligibility      EligibilityStatus  @default(BOTH)
+  sampleDocs       String?            @db.Text
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  DocumentSelected DocumentSelected[]
+}
+
+model DocumentPayment {
+  id               String            @id @default(uuid()) @db.VarChar(36)
+  paymentOptions   PaymentOptions?
+  status           PaymentStatus     @default(PENDING)
+  referenceNumber  String
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  documentFees     Decimal?          @db.Decimal(10, 2)
+  shippingFees     Decimal?          @db.Decimal(10, 2)
+  totalAmount      Decimal?          @db.Decimal(10, 2)
+  xenditInvoiceId  String?
+  RequestDocuments RequestDocuments?
+}
+
+model RequestDocuments {
+  id                String                  @id @default(uuid()) @db.VarChar(36)
+  selectedSchedule  DateTime?
+  deliverOptions    DeliveryOptions
+  documentPaymentId String                  @unique @db.VarChar(36)
+  status            RequestDocumentsStatus?
+  address           String?                 @db.Text
+  additionalAddress String?                 @db.Text
+  longitude         String?
+  latitude          String?
+  usersId           String                  @db.VarChar(36)
+  createdAt         DateTime                @default(now())
+  updatedAt         DateTime                @updatedAt
+  logisticOrderId   String?
+  DocumentSelected  DocumentSelected[]
+  documentPayment   DocumentPayment         @relation(fields: [documentPaymentId], references: [id], onDelete: Cascade)
+  users             Users                   @relation(fields: [usersId], references: [id], onDelete: Cascade)
+}
+
+model DocumentSelected {
+  id                 String           @id @default(uuid()) @db.VarChar(36)
+  documentId         String           @db.VarChar(36)
+  userId             String           @db.VarChar(36)
+  requestDocumentsId String           @db.VarChar(36)
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  document           Documents        @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  requestDocument    RequestDocuments @relation(fields: [requestDocumentsId], references: [id], onDelete: Cascade)
+  user               Users            @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum Role {
+  STUDENT
+  ADMIN
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  CANCELLED
+}
+
+enum PaymentOptions {
+  GCASH
+  PAYMAYA
+  PAYPAL
+  CREDITCARD
+  WALKIN
+}
+
+enum DeliveryOptions {
+  PICKUP
+  LALAMOVE
+}
+
+enum RequestDocumentsStatus {
+  PENDING
+  PAID
+  PROCESSING
+  READYTOPICKUP
+  OUTFORDELIVERY
+  COMPLETED
+  CANCELLED
+}
+
+enum EligibilityStatus {
+  STUDENT
+  GRADUATED
+  BOTH
+}
