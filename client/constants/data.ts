@@ -215,6 +215,18 @@ export const navItems: NavItem[] = [
         href: '/dashboard/settings/user-management',
         icon: 'user',
         label: 'user-management'
+      },
+      {
+        title: 'Order Status',
+        href: '/dashboard/settings/order-status',
+        icon: 'page',
+        label: 'order-status'
+      },
+      {
+        title: 'Roles Management',
+        href: '/dashboard/settings/roles-management',
+        icon: 'settings',
+        label: 'roles-management'
       }
     ]
   },

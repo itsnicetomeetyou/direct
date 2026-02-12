@@ -126,6 +126,25 @@ model Holiday {
   updatedAt DateTime @updatedAt
 }
 
+model OrderStatusSetting {
+  id        String   @id @default(uuid()) @db.VarChar(36)
+  name      String   @unique
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model RolePermission {
+  id        String   @id @default(uuid()) @db.VarChar(36)
+  role      Role
+  tabKey    String
+  canAccess Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([role, tabKey])
+}
+
 enum Role {
   STUDENT
   ADMIN

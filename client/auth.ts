@@ -36,7 +36,8 @@ export const { auth, handlers, signOut, signIn } = NextAuth({
           if (checkPasswordCorrect) {
             return {
               id: userData.id,
-              email: userData.email
+              email: userData.email,
+              role: userData.role
             };
           } else {
             return null;

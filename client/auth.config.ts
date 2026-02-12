@@ -10,11 +10,18 @@ const authConfig = {
     strategy: 'jwt'
   },
   callbacks: {
+    jwt: ({ token, user }) => {
+      if (user) {
+        token.role = (user as any).role;
+      }
+      return token;
+    },
     session: ({ session, token }) => ({
       ...session,
       user: {
         ...session.user,
-        id: token.sub
+        id: token.sub,
+        role: token.role as string
       }
     }),
     authorized({ auth }) {

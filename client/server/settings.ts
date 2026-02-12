@@ -129,3 +129,104 @@ export async function deleteHoliday(id: string) {
   await prisma.holiday.delete({ where: { id } });
   revalidatePath('/dashboard/settings/schedule-options');
 }
+
+// ==================== ORDER STATUS SETTINGS ====================
+
+export async function fetchOrderStatuses() {
+  const statuses = await prisma.orderStatusSetting.findMany({
+    orderBy: { createdAt: 'asc' }
+  });
+  return statuses;
+}
+
+export async function toggleOrderStatus(id: string, isActive: boolean) {
+  const status = await prisma.orderStatusSetting.update({
+    where: { id },
+    data: { isActive }
+  });
+  revalidatePath('/dashboard/settings/order-status');
+  return status;
+}
+
+export async function seedOrderStatuses() {
+  const defaults = [
+    { name: 'PENDING', isActive: true },
+    { name: 'PAID', isActive: true },
+    { name: 'PROCESSING', isActive: true },
+    { name: 'READYTOPICKUP', isActive: true },
+    { name: 'OUTFORDELIVERY', isActive: true },
+    { name: 'COMPLETED', isActive: true },
+    { name: 'CANCELLED', isActive: true }
+  ];
+  for (const s of defaults) {
+    try {
+      await prisma.orderStatusSetting.upsert({
+        where: { name: s.name },
+        update: {},
+        create: s
+      });
+    } catch (e: any) {
+      if (e?.code !== 'P2002') throw e;
+    }
+  }
+  return fetchOrderStatuses();
+}
+
+// ==================== ROLE PERMISSIONS ====================
+
+// All configurable tab keys matching navItems labels
+const ALL_TAB_KEYS = [
+  'Dashboard',
+  'transaction',
+  'transaction-list',
+  'settings',
+  'payment-options',
+  'shipping-options',
+  'schedule-options',
+  'user-management',
+  'order-status',
+  'roles-management'
+];
+
+export async function fetchRolePermissions(role: 'ADMIN' | 'STUDENT') {
+  // Seed defaults if missing
+  for (const tabKey of ALL_TAB_KEYS) {
+    try {
+      await prisma.rolePermission.upsert({
+        where: { role_tabKey: { role, tabKey } },
+        update: {},
+        create: {
+          role,
+          tabKey,
+          canAccess: role === 'ADMIN' ? true : false
+        }
+      });
+    } catch (e: any) {
+      if (e?.code !== 'P2002') throw e;
+    }
+  }
+  return prisma.rolePermission.findMany({
+    where: { role },
+    orderBy: { createdAt: 'asc' }
+  });
+}
+
+export async function toggleRolePermission(id: string, canAccess: boolean) {
+  const perm = await prisma.rolePermission.update({
+    where: { id },
+    data: { canAccess }
+  });
+  revalidatePath('/dashboard/settings/roles-management');
+  return perm;
+}
+
+export async function getPermissionsForRole(role: string) {
+  const permissions = await prisma.rolePermission.findMany({
+    where: { role: role as any }
+  });
+  // If no permissions configured yet, ADMIN gets everything
+  if (permissions.length === 0 && role === 'ADMIN') {
+    return ALL_TAB_KEYS;
+  }
+  return permissions.filter((p) => p.canAccess).map((p) => p.tabKey);
+}
