@@ -12,7 +12,7 @@ model Users {
   emailVerified    Boolean            @default(false)
   email            String             @unique
   password         String
-  role             Role               @default(STUDENT)
+  role             String             @default("STUDENT")
   createdAt        DateTime           @default(now())
   updatedAt        DateTime           @updatedAt
   DocumentSelected DocumentSelected[]
@@ -136,7 +136,7 @@ model OrderStatusSetting {
 
 model RolePermission {
   id        String   @id @default(uuid()) @db.VarChar(36)
-  role      Role
+  role      String
   tabKey    String
   canAccess Boolean  @default(true)
   createdAt DateTime @default(now())
@@ -145,9 +145,12 @@ model RolePermission {
   @@unique([role, tabKey])
 }
 
-enum Role {
-  STUDENT
-  ADMIN
+model RoleDefinition {
+  id        String   @id @default(uuid()) @db.VarChar(36)
+  name      String   @unique
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 enum PaymentStatus {

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
-import { Plus, Trash2, KeyRound, ShieldCheck, ShieldAlert, Search } from 'lucide-react';
+import { Plus, Trash2, KeyRound, ShieldCheck, Search } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -68,12 +68,14 @@ export default function UserManagementClient({
   users,
   totalUsers,
   currentPage,
-  pageSize
+  pageSize,
+  availableRoles = ['ADMIN', 'STUDENT']
 }: {
   users: UserItem[];
   totalUsers: number;
   currentPage: number;
   pageSize: number;
+  availableRoles?: string[];
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -89,7 +91,7 @@ export default function UserManagementClient({
   const [newUser, setNewUser] = useState({
     email: '',
     password: '',
-    role: 'STUDENT' as 'STUDENT' | 'ADMIN',
+    role: 'STUDENT',
     firstName: '',
     lastName: '',
     middleName: '',
@@ -240,18 +242,18 @@ export default function UserManagementClient({
                 <Select
                   value={newUser.role}
                   onValueChange={(v) =>
-                    setNewUser({
-                      ...newUser,
-                      role: v as 'STUDENT' | 'ADMIN'
-                    })
+                    setNewUser({ ...newUser, role: v })
                   }
                 >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="STUDENT">Student</SelectItem>
-                    <SelectItem value="ADMIN">Admin</SelectItem>
+                    {availableRoles.map((r) => (
+                      <SelectItem key={r} value={r}>
+                        {r}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -433,17 +435,8 @@ export default function UserManagementClient({
                         <DropdownMenuItem
                           onClick={() => handleToggleRole(user.id)}
                         >
-                          {user.role === 'ADMIN' ? (
-                            <>
-                              <ShieldAlert className="mr-2 h-4 w-4" />
-                              Set as Student
-                            </>
-                          ) : (
-                            <>
-                              <ShieldCheck className="mr-2 h-4 w-4" />
-                              Set as Admin
-                            </>
-                          )}
+                          <ShieldCheck className="mr-2 h-4 w-4" />
+                          Toggle Role
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => {

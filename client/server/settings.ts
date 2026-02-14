@@ -201,7 +201,71 @@ const ALL_TAB_KEYS = [
   'roles-management'
 ];
 
-export async function fetchRolePermissions(role: 'ADMIN' | 'STUDENT') {
+// ==================== ROLE DEFINITIONS ====================
+
+export async function fetchRoleDefinitions() {
+  // Seed default roles if none exist
+  const count = await prisma.roleDefinition.count();
+  if (count === 0) {
+    for (const r of [
+      { name: 'ADMIN', isDefault: true },
+      { name: 'STUDENT', isDefault: true }
+    ]) {
+      try {
+        await prisma.roleDefinition.upsert({
+          where: { name: r.name },
+          update: {},
+          create: r
+        });
+      } catch (e: any) {
+        if (e?.code !== 'P2002') throw e;
+      }
+    }
+  }
+  return prisma.roleDefinition.findMany({
+    orderBy: { createdAt: 'asc' }
+  });
+}
+
+export async function createRoleDefinition(name: string) {
+  const normalized = name.toUpperCase().replace(/\s+/g, '_');
+  const role = await prisma.roleDefinition.create({
+    data: { name: normalized, isDefault: false }
+  });
+  // Seed permissions for the new role (all denied by default)
+  for (const tabKey of ALL_TAB_KEYS) {
+    try {
+      await prisma.rolePermission.upsert({
+        where: { role_tabKey: { role: normalized, tabKey } },
+        update: {},
+        create: { role: normalized, tabKey, canAccess: false }
+      });
+    } catch (e: any) {
+      if (e?.code !== 'P2002') throw e;
+    }
+  }
+  revalidatePath('/dashboard/settings/roles-management');
+  return role;
+}
+
+export async function deleteRoleDefinition(id: string) {
+  const role = await prisma.roleDefinition.findUnique({ where: { id } });
+  if (!role) throw new Error('Role not found');
+  if (role.isDefault) throw new Error('Cannot delete default roles');
+  // Delete all permissions for this role
+  await prisma.rolePermission.deleteMany({ where: { role: role.name } });
+  // Reset any users with this role back to STUDENT
+  await prisma.users.updateMany({
+    where: { role: role.name },
+    data: { role: 'STUDENT' }
+  });
+  await prisma.roleDefinition.delete({ where: { id } });
+  revalidatePath('/dashboard/settings/roles-management');
+}
+
+// ==================== ROLE PERMISSIONS ====================
+
+export async function fetchRolePermissions(role: string) {
   // Seed defaults if missing
   for (const tabKey of ALL_TAB_KEYS) {
     try {
@@ -235,7 +299,7 @@ export async function toggleRolePermission(id: string, canAccess: boolean) {
 
 export async function getPermissionsForRole(role: string) {
   const permissions = await prisma.rolePermission.findMany({
-    where: { role: role as any }
+    where: { role }
   });
 
   // Build a map of configured permissions
@@ -250,7 +314,6 @@ export async function getPermissionsForRole(role: string) {
     if (configured !== undefined) {
       if (configured) allowedTabs.push(tabKey);
     } else {
-      // Not configured yet - default based on role
       if (role === 'ADMIN') allowedTabs.push(tabKey);
     }
   }

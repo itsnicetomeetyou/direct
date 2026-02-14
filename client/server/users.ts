@@ -28,7 +28,7 @@ export async function fetchUsers({ page, limit, search, role }: FetchUsersParams
       }
     ];
   }
-  if (role && (role === 'ADMIN' || role === 'STUDENT')) {
+  if (role) {
     where.role = role;
   }
 
@@ -51,7 +51,7 @@ export async function fetchUsers({ page, limit, search, role }: FetchUsersParams
 export async function createUser(data: {
   email: string;
   password: string;
-  role: 'STUDENT' | 'ADMIN';
+  role: string;
   firstName?: string;
   lastName?: string;
   studentNo?: string;
@@ -100,7 +100,7 @@ export async function updateUser(
   userId: string,
   data: {
     email?: string;
-    role?: 'STUDENT' | 'ADMIN';
+    role?: string;
     password?: string;
     emailVerified?: boolean;
     firstName?: string;

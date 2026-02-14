@@ -3,6 +3,7 @@ import PageContainer from '@/components/layout/page-container';
 import { Heading } from '@/components/ui/heading';
 import { Separator } from '@/components/ui/separator';
 import { fetchUsers } from '@/server/users';
+import { fetchRoleDefinitions } from '@/server/settings';
 import UserManagementClient from './user-management-client';
 
 const breadcrumbItems = [
@@ -25,7 +26,11 @@ export default async function UserManagementPage({
   const role = searchParams.role || null;
   const limit = 10;
 
-  const { users, totalUsers } = await fetchUsers({ page, limit, search, role });
+  const [{ users, totalUsers }, roleDefinitions] = await Promise.all([
+    fetchUsers({ page, limit, search, role }),
+    fetchRoleDefinitions()
+  ]);
+  const availableRoles = roleDefinitions.map((r) => r.name);
 
   const serializedUsers = users.map((u) => ({
     id: u.id,
@@ -58,6 +63,7 @@ export default async function UserManagementPage({
           totalUsers={totalUsers}
           currentPage={page}
           pageSize={limit}
+          availableRoles={availableRoles}
         />
       </div>
     </PageContainer>

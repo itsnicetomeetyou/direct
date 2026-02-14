@@ -2,7 +2,10 @@ import { Breadcrumbs } from '@/components/breadcrumbs';
 import PageContainer from '@/components/layout/page-container';
 import { Heading } from '@/components/ui/heading';
 import { Separator } from '@/components/ui/separator';
-import { fetchRolePermissions } from '@/server/settings';
+import {
+  fetchRoleDefinitions,
+  fetchRolePermissions
+} from '@/server/settings';
 import RolesManagementClient from './roles-management-client';
 
 const breadcrumbItems = [
@@ -16,16 +19,25 @@ export const metadata = {
 };
 
 export default async function RolesManagementPage() {
-  const adminPerms = await fetchRolePermissions('ADMIN');
-  const studentPerms = await fetchRolePermissions('STUDENT');
+  const roleDefinitions = await fetchRoleDefinitions();
 
-  const serializePerms = (perms: typeof adminPerms) =>
-    perms.map((p) => ({
-      id: p.id,
-      role: p.role,
-      tabKey: p.tabKey,
-      canAccess: p.canAccess
-    }));
+  // Fetch permissions for each role
+  const rolesWithPermissions = await Promise.all(
+    roleDefinitions.map(async (rd) => {
+      const perms = await fetchRolePermissions(rd.name);
+      return {
+        id: rd.id,
+        name: rd.name,
+        isDefault: rd.isDefault,
+        permissions: perms.map((p) => ({
+          id: p.id,
+          role: p.role,
+          tabKey: p.tabKey,
+          canAccess: p.canAccess
+        }))
+      };
+    })
+  );
 
   return (
     <PageContainer scrollable>
@@ -33,13 +45,10 @@ export default async function RolesManagementPage() {
         <Breadcrumbs items={breadcrumbItems} />
         <Heading
           title="Roles Management"
-          description="Configure which pages and features each role can access"
+          description="Manage roles and configure which pages each role can access"
         />
         <Separator />
-        <RolesManagementClient
-          adminPermissions={serializePerms(adminPerms)}
-          studentPermissions={serializePerms(studentPerms)}
-        />
+        <RolesManagementClient roles={rolesWithPermissions} />
       </div>
     </PageContainer>
   );
