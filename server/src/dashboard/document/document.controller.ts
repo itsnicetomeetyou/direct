@@ -9,7 +9,6 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
-import { Role } from '@prisma/client';
 import { Roles } from '../../../src/roles/roles.decorator';
 import { RolesGuard } from '../../../src/roles/roles.guard';
 import { DocumentService } from './document.service';
@@ -22,28 +21,28 @@ import { CreateOrder } from '../../../src/logistics/lalamove/dto/lalamove.dto';
 export class DocumentController {
   constructor(private documentService: DocumentService) {}
 
-  @Roles(Role.STUDENT)
+  @Roles('STUDENT')
   @UseGuards(RolesGuard)
   @Get('list')
   findManyDocuments(@Req() { user }: { user: UserAuth }) {
     return this.documentService.findManyDocuments(user);
   }
 
-  @Roles(Role.STUDENT)
+  @Roles('STUDENT')
   @UseGuards(RolesGuard)
   @Get('delivery')
   findManyDeliveryOptions() {
     return this.documentService.findManyDeliveryOptions();
   }
 
-  // @Roles(Role.STUDENT)
+  // @Roles('STUDENT')
   // @UseGuards(RolesGuard)
   // @Get('payment')
   // findManyPaymentOptions() {
   //   return this.documentService.findManyPaymentOptions();
   // }
 
-  @Roles(Role.STUDENT)
+  @Roles('STUDENT')
   @UseGuards(RolesGuard)
   @Post()
   createDocument(
@@ -53,14 +52,14 @@ export class DocumentController {
     return this.documentService.createDocument(user, data);
   }
 
-  @Roles(Role.STUDENT)
+  @Roles('STUDENT')
   @UseGuards(RolesGuard)
   @Get('transaction')
   findManyDocumentTransaction(@Req() { user }: { user: UserAuth }) {
     return this.documentService.findManyDocumentTransaction(user);
   }
 
-  @Roles(Role.STUDENT)
+  @Roles('STUDENT')
   @UseGuards(RolesGuard)
   @Get('transaction/:id')
   findOneDocumentTransaction(
@@ -70,7 +69,7 @@ export class DocumentController {
     return this.documentService.findOneDocumentTransaction(id, user);
   }
 
-  @Roles(Role.STUDENT)
+  @Roles('STUDENT')
   @UseGuards(RolesGuard)
   @Put('transaction/:id')
   payDocumentRequest(
@@ -80,7 +79,7 @@ export class DocumentController {
     return this.documentService.payDocumentRequest(id, user);
   }
 
-  @Roles(Role.STUDENT)
+  @Roles('STUDENT')
   @UseGuards(RolesGuard)
   @Post(':id/cancel')
   cancelOrder(
@@ -91,14 +90,14 @@ export class DocumentController {
     return this.documentService.cancelOrder(id, user);
   }
 
-  @Roles(Role.STUDENT)
+  @Roles('STUDENT')
   @UseGuards(RolesGuard)
   @Post('quotation')
   checkQuotation(@Body() data: CheckQuotation) {
     return this.documentService.checkQuotation(data);
   }
 
-  @Roles(Role.STUDENT)
+  @Roles('STUDENT')
   @UseGuards(RolesGuard)
   @Post('order/:id')
   placeOrder(
@@ -116,7 +115,7 @@ export class DocumentController {
     return this.documentService.placeOrder(id, data);
   }
 
-  @Roles(Role.STUDENT)
+  @Roles('STUDENT')
   @UseGuards(RolesGuard)
   @Get('order/:id')
   retrieveOrder(@Param('id') id: string) {

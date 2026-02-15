@@ -77,12 +77,14 @@ export default function AddressModal({
           50
         );
       }
-    } catch (err) {
-      if (err instanceof Error) {
-        return toast.error("Something went wrong", {
-          description: err.message || "Please try again",
-        });
-      }
+    } catch (err: any) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : err?.data?.message || err?.error || "Please try again";
+      return toast.error("Something went wrong", {
+        description: typeof message === "string" ? message : "Please try again",
+      });
     }
   };
 

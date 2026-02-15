@@ -79,7 +79,7 @@ const Documents = () => {
               flex: 1,
             }}
           >
-            <AntDesign name="search1" size={20} color="black" />
+            <AntDesign name="search" size={20} color="black" />
             <TextInput
               placeholder="Search"
               style={{
@@ -106,7 +106,7 @@ const Documents = () => {
               width: moderateScale(80),
             }}
           >
-            <AntDesign name="addfile" size={24} color="#007AEB" />
+            <AntDesign name="file-add" size={24} color="#007AEB" />
           </TouchableOpacity>
         </View>
       </View>

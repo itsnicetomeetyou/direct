@@ -42,12 +42,22 @@ export default function OrderConfirmation(props: { open: boolean; onClose: () =>
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
+  // Determine which tab index to skip based on shipping option
+  // PICKUP → skip Address (index 2), LALAMOVE → skip Schedule (index 3)
+  const skipIndex = selectedDocuments.shippingOptions === 'PICKUP' ? 2 : 3;
+
   const handleNextClick = () => {
-    setSelectedIndex((prevIndex) => prevIndex + 1);
+    setSelectedIndex((prevIndex) => {
+      const next = prevIndex + 1;
+      return next === skipIndex ? next + 1 : next;
+    });
   };
 
   const handleBackClick = () => {
-    setSelectedIndex((prevIndex) => prevIndex - 1);
+    setSelectedIndex((prevIndex) => {
+      const prev = prevIndex - 1;
+      return prev === skipIndex ? prev - 1 : prev;
+    });
   };
 
   const onClickConfirm = async () => {
@@ -172,23 +182,29 @@ export default function OrderConfirmation(props: { open: boolean; onClose: () =>
 
             <TabGroup selectedIndex={selectedIndex}>
               <TabList className="flex space-x-1 rounded-xl p-1">
-                {tabs.map((tab, index) => (
-                  <Tab
-                    key={index}
-                    className={({ selected }) => {
-                      return classNames(
-                        'w-full rounded-lg  text-sm font-semibold opacity-80',
-                        ' border-none outline-none',
-                        poppins.className,
-                        selected
-                          ? ' text-sm text-blue-500 underline underline-offset-8'
-                          : ' text-black hover:bg-white/[0.12] hover:text-blue-500'
-                      );
-                    }}
-                  >
-                    {tab}
-                  </Tab>
-                ))}
+                {tabs.map((tab, index) => {
+                  const isSkipped = index === skipIndex;
+                  return (
+                    <Tab
+                      key={index}
+                      disabled={isSkipped}
+                      className={({ selected }) => {
+                        return classNames(
+                          'w-full rounded-lg  text-sm font-semibold',
+                          ' border-none outline-none',
+                          poppins.className,
+                          isSkipped
+                            ? 'hidden'
+                            : selected
+                              ? ' text-sm text-blue-500 underline underline-offset-8 opacity-80'
+                              : ' text-black opacity-80 hover:bg-white/[0.12] hover:text-blue-500'
+                        );
+                      }}
+                    >
+                      {tab}
+                    </Tab>
+                  );
+                })}
               </TabList>
               <TabPanels className="mt-2">
                 <TabPanel className="rounded-xl bg-white p-3">

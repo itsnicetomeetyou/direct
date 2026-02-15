@@ -6,9 +6,19 @@ export const dashboardApiSlice = createApi({
   reducerPath: "dashboardApi",
   baseQuery: fetchBaseQuery({
     baseUrl: process.env.EXPO_PUBLIC_API_URL,
-    validateStatus: (response, result) => {
-      return true;
+    prepareHeaders: (headers) => {
+      headers.set("bypass-tunnel-reminder", "true");
+      return headers;
     },
+    responseHandler: async (response) => {
+      const text = await response.text();
+      try {
+        return JSON.parse(text);
+      } catch {
+        return { message: text || "An unexpected error occurred" };
+      }
+    },
+    validateStatus: () => true,
   }),
   endpoints: (builder) => ({
     postDashboardProfile: builder.mutation({

@@ -51,7 +51,7 @@ export default function CheckStatus(props: {
       }
       if (response && typeof response === 'object' && 'id' in response) {
         setIsLoading(false);
-        setData(response as TDocumentRequest);
+        setData(response as unknown as TDocumentRequest);
         return setViewTransactionModal(true);
       }
     } catch (err) {

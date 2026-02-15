@@ -27,9 +27,11 @@ export default function DocumentItem(item: DocumentItemProps) {
         <div className="flex h-full flex-col items-center justify-between p-4 py-10">
           <div className="text-center">
             <h3 className={`font-semibold text-white ${poppins.className} text-lg font-semibold`}>{item.name}</h3>
-            <p className={`text-lg ${poppins.className} font-medium text-white opacity-70`}>
-              {formatCurrency(item.price)}
-            </p>
+            {Number(item.price) > 0 && (
+              <p className={`text-lg ${poppins.className} font-medium text-white opacity-70`}>
+                {formatCurrency(item.price)}
+              </p>
+            )}
           </div>
         </div>
       </button>
@@ -40,7 +42,9 @@ export default function DocumentItem(item: DocumentItemProps) {
       <div className="flex h-full flex-col items-center justify-between p-4 py-10">
         <div className="text-center">
           <h3 className={`font-semibold text-black ${poppins.className} text-lg font-semibold`}>{item.name}</h3>
-          <p className={`text-lg ${poppins.className} font-medium opacity-60`}>{formatCurrency(item.price)}</p>
+          {Number(item.price) > 0 && (
+            <p className={`text-lg ${poppins.className} font-medium opacity-60`}>{formatCurrency(item.price)}</p>
+          )}
         </div>
       </div>
     </button>

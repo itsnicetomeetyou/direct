@@ -39,7 +39,7 @@ export default function AcademicInformation() {
               fontFamily: "GGSansMedium",
               fontSize: moderateScale(14),
               opacity: 0.4,
-              lineHeight: moderateScale(14),
+              lineHeight: moderateScale(18),
             }}
           >
             Please fill in your academic details below. Ensure the information is accurate and up to date.

@@ -1,16 +1,18 @@
 import nodemailer from 'nodemailer';
 
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: process.env.APP_SMTP_HOST || 'smtp.hostinger.com',
+  port: Number(process.env.APP_SMTP_PORT) || 465,
+  secure: true,
   auth: {
-    user: process.env.APP_GMAIL_EMAIL,
-    pass: process.env.APP_GMAIL_PASS
+    user: process.env.APP_SMTP_EMAIL,
+    pass: process.env.APP_SMTP_PASS
   }
 });
 
 export async function sendCustomEmail(to: string, subject: string, htmlContent: string) {
   const mailOptions = {
-    from: `${process.env.APP_GMAIL_NAME} <${process.env.APP_GMAIL_EMAIL}>`,
+    from: `${process.env.APP_SMTP_NAME || 'DiReCT'} <${process.env.APP_SMTP_EMAIL}>`,
     to,
     subject,
     html: htmlContent

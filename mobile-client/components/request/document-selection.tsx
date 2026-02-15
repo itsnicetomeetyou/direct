@@ -28,7 +28,7 @@ export default function DocumentSelection() {
           >
             <Text
               style={{
-                fontFamily: "GGSansRegular",
+                fontFamily: "GGSansNormal",
                 fontSize: moderateScale(12),
                 color: "#000",
               }}

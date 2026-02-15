@@ -21,7 +21,6 @@ export default function RegisterForm() {
     try {
       setIsLoading(true);
       if (selectRegisterForm.password !== selectRegisterForm.confirmPassword) {
-        setIsLoading(false);
         return toast.error("Password does not match.", {
           description: "Please make sure that your password match.",
         });
@@ -30,36 +29,40 @@ export default function RegisterForm() {
         email: selectRegisterForm.email,
         password: selectRegisterForm.password,
       }).unwrap();
-      if (status === 400 && Array.isArray(data.message)) {
-        setIsLoading(false);
+      if (!data) {
+        return toast.error("An Error Occurred", {
+          description: "Server returned an empty response. Please try again.",
+        });
+      }
+      if (status === 400 && Array.isArray(data?.message)) {
         return toast.error("An error occurred. Please try again later.", {
           description: data.message.join(", "),
         });
       }
-      if (status === 409 && data.message === "User Already Exists") {
-        setIsLoading(false);
+      if (status === 409 && data?.message === "User Already Exists") {
         return toast.error("User Already Exists", {
           description: "Please change email address.",
         });
       }
-      if (status === 201 && data.id) {
-        setIsLoading(false);
+      if (status === 201 && data?.id) {
         toast.success("Successfully registered.", {
           description: "You can now login.",
         });
         return router.push("/(authentication-tab)/login");
       }
-      setIsLoading(false);
       return toast.error("An error occurred. Please try again later.", {
-        description: "Please try again later.",
+        description: data?.message || "Please try again later.",
       });
-    } catch (err) {
-      if (err instanceof Error) {
-        setIsLoading(false);
-        return toast.error("An error occurred. Please try again later.", {
-          description: err.message,
-        });
-      }
+    } catch (err: any) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : err?.data?.message || err?.error || "Something went wrong. Please try again.";
+      return toast.error("An error occurred.", {
+        description: typeof message === "string" ? message : "Please try again later.",
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
   return (

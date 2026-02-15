@@ -3,7 +3,6 @@ import { Prisma, RequestDocumentsStatus } from '@prisma/client';
 import { revalidatePath } from 'next/cache';
 import { prisma } from './prisma';
 import { retrieveOrder } from './utils/lalamove';
-import { uploadToCloudinary } from './kiosk';
 import { EligibilityStatus } from '@prisma/client';
 
 interface FetchDocumentsParams {
@@ -40,24 +39,22 @@ export async function fetchDocuments({ page, limit, search }: FetchDocumentsPara
   };
 }
 
-export async function createDocument(data: FormData) {
-  const formName = data.get('name') as string;
-  const formPrice = data.get('price') as string;
-  const formAvailabilityStatus = data.get('isAvailable') as string;
-  const formEligibilityStatus = data.get('eligibility') as EligibilityStatus;
-
+export async function createDocument(data: {
+  name: string;
+  price: string;
+  isAvailable: string;
+  eligibility: string;
+}) {
   const nameExist = await prisma.documents.findFirst({
-    where: { name: formName }
+    where: { name: data.name }
   });
   if (nameExist) throw new Error('Document name already exists');
-  const cloudinaryResponse = await uploadToCloudinary(data);
   const response = await prisma.documents.create({
     data: {
-      name: formName,
-      price: formPrice,
-      isAvailable: formAvailabilityStatus == 'true' ? true : false,
-      eligibility: formEligibilityStatus,
-      sampleDocs: cloudinaryResponse.secure_url
+      name: data.name,
+      price: data.price,
+      isAvailable: data.isAvailable == 'true' ? true : false,
+      eligibility: data.eligibility as EligibilityStatus
     }
   });
   return response;
@@ -74,25 +71,23 @@ export async function fetchDocumentById(documentId: string) {
   return document;
 }
 
-export async function updateDocument(documentId: string, data: FormData) {
-  const formName = data.get('name') as string;
-  const formPrice = data.get('price') as string;
-  const formAvailabilityStatus = data.get('isAvailable') as string;
-  const formEligibilityStatus = data.get('eligibility') as EligibilityStatus;
-
+export async function updateDocument(documentId: string, data: {
+  name: string;
+  price: string;
+  isAvailable: string;
+  eligibility: string;
+}) {
   const checkDocumentExist = await prisma.documents.findFirst({
     where: { id: documentId }
   });
   if (!checkDocumentExist) throw new Error('Document not found');
-  const cloudinaryResponse = await uploadToCloudinary(data);
   const response = await prisma.documents.update({
     where: { id: documentId },
     data: {
-      name: formName,
-      price: formPrice,
-      isAvailable: formAvailabilityStatus == 'true' ? true : false,
-      eligibility: formEligibilityStatus,
-      sampleDocs: cloudinaryResponse.secure_url
+      name: data.name,
+      price: data.price,
+      isAvailable: data.isAvailable == 'true' ? true : false,
+      eligibility: data.eligibility as EligibilityStatus
     }
   });
   return response;

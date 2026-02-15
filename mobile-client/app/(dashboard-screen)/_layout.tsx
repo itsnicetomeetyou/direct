@@ -47,6 +47,18 @@ export default function DashboardScreenLayout() {
           },
         }}
       />
+
+      <Stack.Screen
+        name="payment-links"
+        options={{
+          title: "Payment",
+          headerTitleAlign: "center",
+          headerTitleStyle: {
+            fontFamily: "GGSansBold",
+            color: "#007AEB",
+          },
+        }}
+      />
     </Stack>
   );
 }

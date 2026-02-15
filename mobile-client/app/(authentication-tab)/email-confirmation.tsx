@@ -38,12 +38,14 @@ export default function EmailConfirmation() {
       return toast.warning("Something went wrong", {
         description: "Please try again.",
       });
-    } catch (err) {
-      if (err instanceof Error) {
-        return toast.error("Error", {
-          description: err.message,
-        });
-      }
+    } catch (err: any) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : err?.data?.message || err?.error || "Something went wrong. Please try again.";
+      return toast.error("An error occurred.", {
+        description: typeof message === "string" ? message : "Please try again later.",
+      });
     }
   };
 

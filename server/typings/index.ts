@@ -1,5 +1,3 @@
-import { Role } from '@prisma/client';
-
 /**
  * Interface representing the user object.
  */
@@ -17,7 +15,7 @@ export interface UserAuth {
   /**
    * The role of the user.
    */
-  role: Role; // Adjust roles as necessary
+  role: string;
 
   /**
    * The issued at timestamp.

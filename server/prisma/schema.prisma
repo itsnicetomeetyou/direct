@@ -12,7 +12,7 @@ model Users {
   emailVerified    Boolean            @default(false)
   email            String             @unique
   password         String
-  role             Role               @default(STUDENT)
+  role             String             @default("STUDENT")
   createdAt        DateTime           @default(now())
   updatedAt        DateTime           @updatedAt
   DocumentSelected DocumentSelected[]
@@ -94,11 +94,6 @@ model DocumentSelected {
   user               Users            @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-enum Role {
-  STUDENT
-  ADMIN
-}
-
 enum PaymentStatus {
   PENDING
   PAID
@@ -111,6 +106,8 @@ enum PaymentOptions {
   PAYPAL
   CREDITCARD
   WALKIN
+  PORTAL_GENERATED
+  ATTACHED_FILE
 }
 
 enum DeliveryOptions {

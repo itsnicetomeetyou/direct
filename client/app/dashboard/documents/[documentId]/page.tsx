@@ -14,7 +14,7 @@ export default async function Page({ params }: { params: { documentId: string } 
     const data = await fetchDocumentById(documentId);
     return (
       <DocumentViewPage
-        {...{ ...data, price: data?.price ? Number(data.price) : 0, sampleDocs: data?.sampleDocs ?? undefined }}
+        {...{ ...data, price: data?.price ? Number(data.price) : 0 }}
       />
     );
   } catch (error) {

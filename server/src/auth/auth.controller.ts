@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SignUpDto } from './dto/sign-up.dto';
-import { Role, Users } from '@prisma/client';
+import { Users } from '@prisma/client';
 import { SignInDto } from './dto/sign-in.dto';
 import { Roles } from '../../src/roles/roles.decorator';
 import { RolesGuard } from '../../src/roles/roles.guard';
@@ -42,7 +42,7 @@ export class AuthController {
     return this.authService.signIn(data);
   }
 
-  @Roles(Role.STUDENT)
+  @Roles('STUDENT')
   @UseGuards(RolesGuard)
   @Get('profile')
   getProfile(@Request() req) {

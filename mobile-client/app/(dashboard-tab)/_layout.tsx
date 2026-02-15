@@ -23,7 +23,7 @@ export default function DashboardTab() {
   );
   return (
     <Tabs
-      screenOptions={({ route }) => ({
+      screenOptions={({ route }: { route: any }) => ({
         headerShown: route.name === "profile",
         headerTitle: "",
         headerTransparent: route.name === "profile",
@@ -43,13 +43,13 @@ export default function DashboardTab() {
                   marginLeft: moderateScale(10),
                 }}
               >
-                <AntDesign name="arrowleft" size={24} color="#fff" onPress={() => router.back()} />
+                <AntDesign name="arrow-left" size={24} color="#fff" onPress={() => router.back()} />
               </View>
             );
           }
         },
         tabBarHideOnKeyboard: true,
-        tabBarIcon: ({ focused }) => {
+        tabBarIcon: ({ focused }: { focused: boolean }) => {
           if (route.name === "home")
             return focused ? (
               <HomeActive height={30} width={30} fill={"#007AEB"} />
@@ -69,7 +69,7 @@ export default function DashboardTab() {
               <ProfileInActive height={30} width={30} opacity={0.2} />
             );
         },
-        tabBarLabel: ({ focused }) => {
+        tabBarLabel: ({ focused }: { focused: boolean }) => {
           if (route.name === "home") {
             return (
               <Text

@@ -44,9 +44,9 @@ export default function ViewMoreModal(data: {
 
   // const totalAmount = data.data.DocumentSelected.reduce((sum, doc) => Number(sum) + Number(doc.document.price), 0);
   const { toast } = useToast();
-  const totalShippingFees = data.data.documentPayment.shippingFees || shippingFees;
+  const totalShippingFees = data.data.documentPayment.shippingFees ?? shippingFees;
   const totalDocumentFess =
-    data.data.documentPayment.documentFees ||
+    data.data.documentPayment.documentFees ??
     data.data.DocumentSelected.reduce((sum, doc) => Number(sum) + Number(doc.document.price), 0);
 
   const onChangeStatus = async (val: RequestDocumentsStatus) => {
@@ -120,9 +120,11 @@ export default function ViewMoreModal(data: {
                 {data.data.DocumentSelected.map((doc, index) => (
                   <li key={index} className="flex items-center justify-between rounded bg-gray-100 p-2">
                     <span className="text-sm font-medium">{doc?.document?.name ?? ''}</span>
-                    <span className="ml-2 text-sm text-gray-500">
-                      {formatCurrency(Number(doc?.document?.price) ?? 0)}
-                    </span>
+                    {Number(doc?.document?.price ?? 0) > 0 && (
+                      <span className="ml-2 text-sm text-gray-500">
+                        {formatCurrency(Number(doc?.document?.price ?? 0))}
+                      </span>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -186,24 +188,30 @@ export default function ViewMoreModal(data: {
               Transaction Information
             </Label>
             <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="name" className="text-right">
-                  Document Fees
-                </Label>
-                <p className="col-span-3 text-sm font-bold">{formatCurrency(Number(totalDocumentFess)) ?? 0}</p>
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="name" className="text-right">
-                  Shipping Fees
-                </Label>
-                <p className="col-span-3 text-sm font-bold">{formatCurrency(Number(totalShippingFees)) ?? 0}</p>
-              </div>
+              {Number(totalDocumentFess) > 0 && (
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="name" className="text-right">
+                    Document Fees
+                  </Label>
+                  <p className="col-span-3 text-sm font-bold">{formatCurrency(Number(totalDocumentFess))}</p>
+                </div>
+              )}
+              {Number(totalShippingFees) > 0 && (
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="name" className="text-right">
+                    Shipping Fees
+                  </Label>
+                  <p className="col-span-3 text-sm font-bold">{formatCurrency(Number(totalShippingFees))}</p>
+                </div>
+              )}
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="name" className="text-right">
                   Total Amount
                 </Label>
                 <p className="col-span-3 text-sm font-bold">
-                  {formatCurrency(Number(totalDocumentFess) + Number(totalShippingFees)) ?? 0}
+                  {(Number(totalDocumentFess) + Number(totalShippingFees)) > 0
+                    ? formatCurrency(Number(totalDocumentFess) + Number(totalShippingFees))
+                    : 'Free'}
                 </p>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
@@ -321,26 +329,15 @@ export default function ViewMoreModal(data: {
                   height: '400px'
                 }}
                 center={{
-                  lat: Number(latitude) ?? 0,
-                  lng: Number(longitude) ?? 0
-                }}
-                onLoad={(map: google.maps.Map) => {
-                  const bounds = new window.google.maps.LatLngBounds({
-                    lat: Number(latitude) ?? 0,
-                    lng: Number(longitude) ?? 0
-                  });
-                  map.panToBounds(bounds);
+                  lat: Number(latitude) || 0,
+                  lng: Number(longitude) || 0
                 }}
                 zoom={15}
               >
                 <Marker
                   position={{
-                    lat: Number(latitude) ?? 0,
-                    lng: Number(longitude) ?? 0
-                  }}
-                  icon={{
-                    url: '/images/pin-icon.png',
-                    scaledSize: new google.maps.Size(30.21, 46.56)
+                    lat: Number(latitude) || 0,
+                    lng: Number(longitude) || 0
                   }}
                 />
               </GoogleMap>

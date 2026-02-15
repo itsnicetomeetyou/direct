@@ -10,8 +10,19 @@ import OrderConfirmation from '@/components/kiosk/dialog/order-confirmation';
 import { setOpenModalConfirmationOrder } from '@/store/kiosk/orderSlice';
 import { useEffect, useState } from 'react';
 import { fetchAllDocuments } from '@/server/kiosk';
-import { Documents } from '@prisma/client';
 import '@cyntler/react-doc-viewer/dist/index.css';
+
+type DocumentItem = {
+  id: string;
+  name: string;
+  price: number;
+  dayBeforeRelease: number;
+  isAvailable: boolean;
+  eligibility: string;
+  sampleDocs: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
 
 const poppins = Poppins({
   weight: ['100', '200', '300', '400', '600', '900'],
@@ -19,7 +30,7 @@ const poppins = Poppins({
 });
 
 export default function Component() {
-  const [menuItems, setMenuItems] = useState<Documents[]>([]);
+  const [menuItems, setMenuItems] = useState<DocumentItem[]>([]);
   const router = useRouter();
   const dispatch = useAppDispatch();
   const selectUserOrder = useAppSelector((state) => state.kioskOrder.order).toReversed();
@@ -56,7 +67,6 @@ export default function Component() {
                 {...item}
                 price={Number(item.price)}
                 isSelected={selectUserOrder.some((items) => item.id === items.id)}
-                sampleDocs={item.sampleDocs ?? undefined}
               />
             ))}
           </div>
@@ -81,10 +91,12 @@ export default function Component() {
           <div className="mb-4 flex items-center justify-between">
             <span className={`text-xl  ${poppins.className} font-medium`}>Total</span>
             <span className={`text-xl  ${poppins.className} font-medium`}>
-              {new Intl.NumberFormat('en-US', {
-                style: 'currency',
-                currency: 'PHP'
-              }).format(totalCost)}
+              {totalCost > 0
+                ? new Intl.NumberFormat('en-US', {
+                    style: 'currency',
+                    currency: 'PHP'
+                  }).format(totalCost)
+                : 'Free'}
             </span>
           </div>
 

@@ -23,14 +23,16 @@ import { XenditService } from './xendit/xendit.service';
     ProfileModule,
     MailerModule.forRoot({
       transport: {
-        service: 'gmail',
+        host: process.env.APP_SMTP_HOST,
+        port: Number(process.env.APP_SMTP_PORT) || 465,
+        secure: true,
         auth: {
-          user: process.env.APP_GMAIL_EMAIL,
-          pass: process.env.APP_GMAIL_PASS,
+          user: process.env.APP_SMTP_EMAIL,
+          pass: process.env.APP_SMTP_PASS,
         },
       },
       defaults: {
-        from: `"No Reply" <${process.env.APP_GMAIL_EMAIL}>`,
+        from: `"${process.env.APP_SMTP_NAME || 'DiReCT'}" <${process.env.APP_SMTP_EMAIL}>`,
       },
       template: {
         dir: join(__dirname, 'templates'),

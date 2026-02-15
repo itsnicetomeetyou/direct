@@ -22,6 +22,72 @@ if (XENDIT_ENABLED) {
   }
 }
 
+// ─── Fetch active delivery options from admin settings ───
+export async function fetchActiveDeliveryOptions(): Promise<string[]> {
+  try {
+    const options = await prisma.shippingOptionSetting.findMany({
+      where: { isActive: true },
+      orderBy: { createdAt: 'asc' },
+    });
+    if (options.length === 0) return ['PICKUP', 'LALAMOVE'];
+    return options.map((o) => o.name);
+  } catch (err) {
+    console.error('[fetchActiveDeliveryOptions]', err);
+    return ['PICKUP', 'LALAMOVE'];
+  }
+}
+
+// ─── Fetch active payment options from admin settings ───
+export async function fetchActivePaymentOptions(): Promise<string[]> {
+  try {
+    const options = await prisma.paymentOptionSetting.findMany({
+      where: { isActive: true },
+      orderBy: { createdAt: 'asc' },
+    });
+    if (options.length === 0) return ['WALKIN'];
+    return options.map((o) => o.name);
+  } catch (err) {
+    console.error('[fetchActivePaymentOptions]', err);
+    return ['WALKIN'];
+  }
+}
+
+// ─── Fetch schedule config from admin settings ──────────
+export async function fetchScheduleConfig(): Promise<{
+  maxSlotsPerDay: number;
+  minDaysAdvance: number;
+}> {
+  try {
+    const config = await prisma.scheduleConfig.findFirst();
+    if (!config) return { maxSlotsPerDay: 300, minDaysAdvance: 3 };
+    return {
+      maxSlotsPerDay: config.maxSlotsPerDay,
+      minDaysAdvance: config.minDaysAdvance,
+    };
+  } catch (err) {
+    console.error('[fetchScheduleConfig]', err);
+    return { maxSlotsPerDay: 300, minDaysAdvance: 3 };
+  }
+}
+
+// ─── Fetch holidays from admin settings ─────────────────
+export async function fetchHolidays(): Promise<
+  { date: string; name: string | null }[]
+> {
+  try {
+    const holidays = await prisma.holiday.findMany({
+      orderBy: { date: 'asc' },
+    });
+    return holidays.map((h) => ({
+      date: moment(h.date).format('YYYY-MM-DD'),
+      name: h.name,
+    }));
+  } catch (err) {
+    console.error('[fetchHolidays]', err);
+    return [];
+  }
+}
+
 async function generateReferenceNumber() {
   // Generate a unique reference number (e.g., using a UUID or a custom logic)
   const referenceNumber = referralCodes.generate({
@@ -45,12 +111,21 @@ export async function fetchStudentNumber(studentNo: string) {
 
 export async function fetchAllDocuments(studentNo: string) {
   const users = await fetchStudentNumber(studentNo);
-  return await prisma.documents.findMany({
+  const docs = await prisma.documents.findMany({
     where: {
       isAvailable: true,
-      eligibility: users.specialOrder ? 'GRADUATED' : 'STUDENT'
+      OR: [
+        { eligibility: users.specialOrder ? 'GRADUATED' : 'STUDENT' },
+        { eligibility: 'BOTH' }
+      ]
     }
   });
+
+  // Convert Decimal fields to numbers for serialization
+  return docs.map((doc) => ({
+    ...doc,
+    price: Number(doc.price)
+  }));
 }
 
 export async function fetchOrderDocument(data: IOrderDocument): Promise<DocumentPayment> {
@@ -260,7 +335,7 @@ export async function fetchOrderDocument(data: IOrderDocument): Promise<Document
                   doc.name
                 }</td>
                 <td style="border-bottom: 1px solid #e5e7eb; padding: 12px; color: #374151; text-align: right; font-size: 15px;">${formatCurrency(
-                  Number(doc.price || 0)
+                  Number(doc.price ?? 0)
                 )}</td>
                 
               </tr>
@@ -275,8 +350,8 @@ export async function fetchOrderDocument(data: IOrderDocument): Promise<Document
         <h3 style="font-size: 20px; font-weight: 600; color: #1f2937; text-align: right;">Total Price: 
         ${
           data.deliverOptions !== 'PICKUP'
-            ? formatCurrency(Number(totalDocumentAmount || 0)) + ' + ' + data.deliverOptions + ' Fees'
-            : formatCurrency(Number(totalDocumentAmount || 0))
+            ? formatCurrency(Number(totalDocumentAmount ?? 0)) + ' + ' + data.deliverOptions + ' Fees'
+            : formatCurrency(Number(totalDocumentAmount ?? 0))
         }
         </h3>
       </div>
@@ -332,7 +407,24 @@ export async function orderCheckStatus(referenceNo: string) {
       }
     });
     if (response === null) throw new Error('Invalid Reference Number');
-    return response;
+
+    // Convert Decimal fields to numbers for serialization across server action boundary
+    return {
+      ...response,
+      documentPayment: {
+        ...response.documentPayment,
+        documentFees: response.documentPayment.documentFees ? Number(response.documentPayment.documentFees) : null,
+        shippingFees: response.documentPayment.shippingFees ? Number(response.documentPayment.shippingFees) : null,
+        totalAmount: response.documentPayment.totalAmount ? Number(response.documentPayment.totalAmount) : null
+      },
+      DocumentSelected: response.DocumentSelected.map((ds) => ({
+        ...ds,
+        document: {
+          ...ds.document,
+          price: Number(ds.document.price)
+        }
+      }))
+    };
   } catch (err) {
     if (err instanceof Error) {
       return err.message;

@@ -23,36 +23,36 @@ export default function LoginForm() {
     try {
       setIsLoading(true);
       if (!selectLoginInput.email || !selectLoginInput.password) {
-        setIsLoading(false);
         return toast.error("Email & Password Required", {
           description: "Please enter your email and password to login",
         });
       }
       const { data, status } = await postLogin(selectLoginInput).unwrap();
-      console.log(process.env.EXPO_PUBLIC_API_URL);
-      if (status === 404 && data.message === "User Not Found") {
-        setIsLoading(false);
+      if (!data) {
+        return toast.error("An Error Occurred", {
+          description: "Server returned an empty response. Please try again.",
+        });
+      }
+      if (status === 404 && data?.message === "User Not Found") {
         return toast.error("User Not Found", {
           description: "User not found, please check your email and password",
         });
       }
       if (status === 400) {
-        if (Array.isArray(data.message)) {
-          setIsLoading(false);
-          data.message.forEach((msg) => {
-            return toast.error("Validation Error", {
+        if (Array.isArray(data?.message)) {
+          data.message.forEach((msg: string) => {
+            toast.error("Validation Error", {
               description: msg,
             });
           });
+          return;
         } else {
-          setIsLoading(false);
           return toast.error("Validation Error", {
-            description: data.message,
+            description: data?.message || "Invalid input",
           });
         }
       }
-      if (status === 201 && data.accessToken && data.emailVerified) {
-        setIsLoading(false);
+      if (status === 201 && data?.accessToken && data?.emailVerified) {
         dispatch(authApiSlice.util.invalidateTags(["LogOut"]));
         dispatch(profileApiSlice.util.invalidateTags(["LogOut"]));
         dispatch(documentApiSlice.util.invalidateTags(["LogOut"]));
@@ -60,11 +60,9 @@ export default function LoginForm() {
         toast.success("Login Success", {
           description: "You have successfully logged in",
         });
-
         return router.push("/(dashboard-tab)/home");
       }
-      if (status === 201 && data.accessToken && !data.emailVerified) {
-        setIsLoading(false);
+      if (status === 201 && data?.accessToken && !data?.emailVerified) {
         toast.error("Email Not Verified", {
           description: "Please verify your email to login",
         });
@@ -75,8 +73,7 @@ export default function LoginForm() {
           },
         });
       }
-      if (status === 401 && data.message === "Email Not Verified") {
-        setIsLoading(false);
+      if (status === 401 && data?.message === "Email Not Verified") {
         toast.error("Email Not Verified", {
           description: "Please verify your email to login",
         });
@@ -87,17 +84,19 @@ export default function LoginForm() {
           },
         });
       }
-      setIsLoading(false);
       return toast.error("An Error Occurred", {
-        description: "An error occurred while trying to login",
+        description: data?.message || "An error occurred while trying to login",
       });
-    } catch (err) {
-      if (err instanceof Error) {
-        setIsLoading(false);
-        return toast.error("Error", {
-          description: err.message,
-        });
-      }
+    } catch (err: any) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : err?.data?.message || err?.error || "Something went wrong. Please try again.";
+      return toast.error("An error occurred.", {
+        description: typeof message === "string" ? message : "Please try again later.",
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 

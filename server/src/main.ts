@@ -5,6 +5,11 @@ import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  app.enableCors({
+    origin: true,
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    credentials: true,
+  });
   app.use(express.urlencoded({ extended: true }));
   app.setGlobalPrefix('api/v1');
   app.useGlobalPipes(
@@ -12,7 +17,7 @@ async function bootstrap() {
       transform: true,
     }),
   );
-  await app.listen(3001);
+  await app.listen(3001, '0.0.0.0');
   console.log(`Application running at ${await app.getUrl()}`);
 }
 

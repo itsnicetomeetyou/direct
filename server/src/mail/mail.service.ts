@@ -21,7 +21,7 @@ export class MailService {
     await this.mailerService.sendMail({
       to,
       subject,
-      from: `${this.configService.get('APP_GMAIL_NAME')} <${this.configService.get('APP_GMAIL_EMAIL')}>`,
+      from: `${this.configService.get('APP_SMTP_NAME') || 'DiReCT'} <${this.configService.get('APP_SMTP_EMAIL')}>`,
       text: content,
       html: content,
     });

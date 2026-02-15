@@ -20,6 +20,20 @@ export async function togglePaymentOption(id: string, isActive: boolean) {
   return option;
 }
 
+export async function createPaymentOption(name: string) {
+  const normalized = name.toUpperCase().replace(/\s+/g, '_');
+  const option = await prisma.paymentOptionSetting.create({
+    data: { name: normalized, isActive: true }
+  });
+  revalidatePath('/dashboard/settings/payment-options');
+  return option;
+}
+
+export async function deletePaymentOption(id: string) {
+  await prisma.paymentOptionSetting.delete({ where: { id } });
+  revalidatePath('/dashboard/settings/payment-options');
+}
+
 export async function seedPaymentOptions() {
   const defaults = [
     { name: 'GCASH', isActive: false },
@@ -56,6 +70,20 @@ export async function toggleShippingOption(id: string, isActive: boolean) {
   });
   revalidatePath('/dashboard/settings/shipping-options');
   return option;
+}
+
+export async function createShippingOption(name: string) {
+  const normalized = name.toUpperCase().replace(/\s+/g, '_');
+  const option = await prisma.shippingOptionSetting.create({
+    data: { name: normalized, isActive: true }
+  });
+  revalidatePath('/dashboard/settings/shipping-options');
+  return option;
+}
+
+export async function deleteShippingOption(id: string) {
+  await prisma.shippingOptionSetting.delete({ where: { id } });
+  revalidatePath('/dashboard/settings/shipping-options');
 }
 
 export async function seedShippingOptions() {

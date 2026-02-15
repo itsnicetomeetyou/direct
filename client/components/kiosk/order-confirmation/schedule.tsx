@@ -1,47 +1,62 @@
+'use client';
+import { useEffect, useState } from 'react';
 import Calendar from 'react-calendar';
 import '@/public/styles/Calender.css';
 import { Poppins } from 'next/font/google';
+import { Loader2 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/hooks/redux';
 import { setOrderDataSchedule } from '@/store/kiosk/orderSlice';
+import { fetchScheduleConfig, fetchHolidays } from '@/server/kiosk';
+import moment from 'moment';
 
 const poppins = Poppins({
   weight: ['100', '200', '300', '400', '500', '600', '900'],
   subsets: ['latin']
 });
 
+type ScheduleConfig = { maxSlotsPerDay: number; minDaysAdvance: number };
+type HolidayItem = { date: string; name: string | null };
+
 export default function Schedule() {
   const dispatch = useAppDispatch();
   const selectOrderData = useAppSelector((state) => state.kioskOrder.orderData);
-  const disabledDates: Array<Date> = [new Date(2024, 9, 10), new Date(2024, 9, 20), new Date(2024, 9, 3)];
+  const [config, setConfig] = useState<ScheduleConfig>({ maxSlotsPerDay: 300, minDaysAdvance: 3 });
+  const [holidays, setHolidays] = useState<HolidayItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    Promise.all([fetchScheduleConfig(), fetchHolidays()]).then(([cfg, hols]) => {
+      setConfig(cfg);
+      setHolidays(hols);
+      setLoading(false);
+    });
+  }, []);
 
   const isDisabledDate = (date: Date) => {
     const today = new Date();
-    let daysToAdd = 3;
-    let threeDaysFromNow = new Date(today);
+    today.setHours(0, 0, 0, 0);
 
+    // Calculate min date (minDaysAdvance business days from today, skipping Sundays)
+    let daysToAdd = config.minDaysAdvance;
+    const minDate = new Date(today);
     while (daysToAdd > 0) {
-      threeDaysFromNow.setDate(threeDaysFromNow.getDate() + 1);
-      if (threeDaysFromNow.getDay() !== 0) {
-        // Skip Sundays
+      minDate.setDate(minDate.getDate() + 1);
+      if (minDate.getDay() !== 0) {
         daysToAdd--;
       }
     }
 
-    return (
-      date < today ||
-      date < threeDaysFromNow ||
-      disabledDates.some(
-        (disabledDate) =>
-          date.getFullYear() === disabledDate.getFullYear() &&
-          date.getMonth() === disabledDate.getMonth() &&
-          date.getDate() === disabledDate.getDate()
-      )
-    );
+    if (date < today || date < minDate) return true;
+
+    // Check if date is a holiday
+    const dateStr = moment(date).format('YYYY-MM-DD');
+    if (holidays.some((h) => h.date === dateStr)) return true;
+
+    return false;
   };
 
   const isWeekend = (date: Date) => {
-    const day = date.getDay();
-    return day === 0;
+    return date.getDay() === 0;
   };
 
   return (
@@ -51,14 +66,22 @@ export default function Schedule() {
         <p className={`mb-4 text-sm text-black/30 ${poppins.className} font-medium`}>
           Select a date for your order to be ready for pickup
         </p>
+        <p className={`text-xs text-black/30 ${poppins.className}`}>
+          Must be at least {config.minDaysAdvance} business days in advance. Sundays and holidays are not available.
+        </p>
       </div>
       <div className="h-[50vh] space-y-2 overflow-y-auto overflow-x-hidden p-5">
-        <Calendar
-          className={selectOrderData.shippingOptions === 'PICKUP' ? '' : 'pointer-events-none opacity-50'}
-          onChange={(e) => dispatch(setOrderDataSchedule(e as any))}
-          value={selectOrderData.schedule}
-          tileDisabled={({ date, view }) => (view === 'month' && isDisabledDate(date)) || isWeekend(date)}
-        />
+        {loading ? (
+          <div className="flex items-center justify-center py-10">
+            <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
+          </div>
+        ) : (
+          <Calendar
+            onChange={(e) => dispatch(setOrderDataSchedule(e as any))}
+            value={selectOrderData.schedule}
+            tileDisabled={({ date, view }) => (view === 'month' && isDisabledDate(date)) || isWeekend(date)}
+          />
+        )}
       </div>
     </>
   );

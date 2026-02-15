@@ -12,9 +12,19 @@ export const authApiSlice = createApi({
   reducerPath: "authApi",
   baseQuery: fetchBaseQuery({
     baseUrl: process.env.EXPO_PUBLIC_API_URL,
-    validateStatus: (response, result) => {
-      return true;
+    prepareHeaders: (headers) => {
+      headers.set("bypass-tunnel-reminder", "true");
+      return headers;
     },
+    responseHandler: async (response) => {
+      const text = await response.text();
+      try {
+        return JSON.parse(text);
+      } catch {
+        return { message: text || "An unexpected error occurred" };
+      }
+    },
+    validateStatus: () => true,
   }),
   tagTypes: ["LogOut"],
   endpoints: (builder) => ({
@@ -24,8 +34,8 @@ export const authApiSlice = createApi({
         method: "POST",
         body: data,
       }),
-      transformResponse: (response: IPostLoginResponse, meta) => {
-        if (response.accessToken) {
+      transformResponse: (response: IPostLoginResponse | null, meta) => {
+        if (response?.accessToken) {
           SecureStore.setItemAsync("token", response.accessToken);
         }
         return { status: meta?.response?.status, data: response };
@@ -38,7 +48,7 @@ export const authApiSlice = createApi({
           Authorization: `Bearer ${SecureStore.getItem("token")}`,
         },
       }),
-      transformResponse: (response: IGetSession, meta) => {
+      transformResponse: (response: IGetSession | null, meta) => {
         return { status: meta?.response?.status, data: response };
       },
       providesTags: ["LogOut"],
@@ -48,7 +58,7 @@ export const authApiSlice = createApi({
         url: `/api/v1/auth/verify-email?email=${data.email}`,
         method: "POST",
       }),
-      transformResponse: (response: IPostEmailConfirmationResponse, meta) => {
+      transformResponse: (response: IPostEmailConfirmationResponse | null, meta) => {
         return { status: meta?.response?.status, data: response };
       },
     }),
@@ -58,7 +68,7 @@ export const authApiSlice = createApi({
         method: "POST",
         body: { ...data, token: data.otpToken },
       }),
-      transformResponse: (response: IPostVerifyOtpResponse, meta) => {
+      transformResponse: (response: IPostVerifyOtpResponse | null, meta) => {
         return { status: meta?.response?.status, data: response };
       },
     }),
@@ -68,7 +78,7 @@ export const authApiSlice = createApi({
         method: "POST",
         body: data,
       }),
-      transformResponse: (response: IPostRegisterResponse, meta) => {
+      transformResponse: (response: IPostRegisterResponse | null, meta) => {
         return { status: meta?.response?.status, data: response };
       },
     }),

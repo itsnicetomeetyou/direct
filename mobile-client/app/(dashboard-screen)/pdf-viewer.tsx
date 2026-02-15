@@ -1,8 +1,7 @@
 import { View, Dimensions } from "react-native";
 import React, { useCallback } from "react";
 import { useFocusEffect, useLocalSearchParams, useNavigation } from "expo-router";
-import Pdf from "react-native-pdf";
-import { toast } from "sonner-native";
+import { WebView } from "react-native-webview";
 
 export default function PdfViewer() {
   const { uri, name } = useLocalSearchParams<{ uri: string; name: string }>();
@@ -14,6 +13,10 @@ export default function PdfViewer() {
       });
     }, [name, navigation])
   );
+
+  // Use Google Docs Viewer to render PDF in a WebView (works in Expo Go)
+  const googleDocsUrl = `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(uri ?? "")}`;
+
   return (
     <View
       style={{
@@ -22,21 +25,8 @@ export default function PdfViewer() {
         alignItems: "center",
       }}
     >
-      <Pdf
-        trustAllCerts={false}
-        source={{ uri: uri }}
-        onLoadComplete={(numberOfPages, filePath) => {
-          console.log(`Number of pages: ${numberOfPages}`);
-        }}
-        onPageChanged={(page, numberOfPages) => {
-          console.log(`Current page: ${page}`);
-        }}
-        onError={(error) => {
-          toast.error("Failed to load PDF file");
-        }}
-        onPressLink={(uri) => {
-          console.log(`Link pressed: ${uri}`);
-        }}
+      <WebView
+        source={{ uri: googleDocsUrl }}
         style={{
           flex: 1,
           width: Dimensions.get("window").width,

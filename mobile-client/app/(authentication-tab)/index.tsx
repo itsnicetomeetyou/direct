@@ -20,7 +20,7 @@ export default function HomeScreen() {
       if (dataGetSession?.data?.id && !dataGetSession?.data?.emailVerified) {
         return router.push({
           pathname: "/(authentication-tab)/email-confirmation",
-          params: { email: dataGetSession.data.email },
+          params: { email: dataGetSession?.data?.email },
         });
       }
       if (dataGetSession?.data?.id && dataGetSession?.data?.emailVerified && !dataGetSession?.data?.UserInformation) {
@@ -45,7 +45,7 @@ export default function HomeScreen() {
       return () => backHandler.remove();
     }, [
       dataGetSession?.data?.UserInformation,
-      dataGetSession?.data.email,
+      dataGetSession?.data?.email,
       dataGetSession?.data?.emailVerified,
       dataGetSession?.data?.id,
       backPressCount,
@@ -90,26 +90,25 @@ export default function HomeScreen() {
               marginVertical: moderateScale(10),
             }}
           >
-            <Text
-              style={{
-                textAlign: "center",
-                fontFamily: "GGSansExtraBold",
-                fontSize: moderateScale(40),
-                letterSpacing: -2,
-                paddingTop: moderateScale(16),
-                lineHeight: moderateScale(38),
-                color: "#fff",
-              }}
-            >
-              WELCOME TO DiReCT
-            </Text>
+            <View style={{ paddingTop: moderateScale(16) }}>
+              <Text
+                style={{
+                  textAlign: "center",
+                  fontFamily: "GGSansExtraBold",
+                  fontSize: moderateScale(40),
+                  lineHeight: moderateScale(44),
+                  color: "#fff",
+                }}
+              >
+                WELCOME TO DiReCT
+              </Text>
+            </View>
             <Text
               style={{
                 textAlign: "center",
                 fontFamily: "GGSansMedium",
                 fontSize: moderateScale(14),
-                lineHeight: moderateScale(14),
-                letterSpacing: 2,
+                lineHeight: moderateScale(18),
                 color: "#fff",
               }}
             >
@@ -135,7 +134,6 @@ export default function HomeScreen() {
               fontFamily: "GGSansMedium",
               fontSize: moderateScale(8),
               lineHeight: moderateScale(20),
-              letterSpacing: 2,
               color: "#fff",
             }}
           >

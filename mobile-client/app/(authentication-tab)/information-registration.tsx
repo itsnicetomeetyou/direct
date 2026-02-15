@@ -64,12 +64,14 @@ export default function InformationRegistration() {
       return toast.error("An error occurred. Please try again later.", {
         description: "Error: " + data.message,
       });
-    } catch (err) {
-      if (err instanceof Error) {
-        return toast.error("An error occurred. Please try again later.", {
-          description: "Error: " + err.message,
-        });
-      }
+    } catch (err: any) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : err?.data?.message || err?.error || "Something went wrong. Please try again.";
+      return toast.error("An error occurred. Please try again later.", {
+        description: typeof message === "string" ? "Error: " + message : "Please try again later.",
+      });
     }
   };
 

@@ -30,7 +30,7 @@ import {
 } from "@/redux/documentSlice";
 import DocumentItemSkeleton from "@/components/skeleton/document-item-skeleton";
 import TransactionDetailsSkeleton from "@/components/skeleton/transaction-details-skeleton";
-import { IOrder } from "@lalamove/lalamove-js/dist/response/order";
+import type { IOrder } from "@lalamove/lalamove-js/dist/response/order";
 import { useGetStatisticsQuery } from "@/redux/statisticsApiSlice";
 
 export default function Transaction() {

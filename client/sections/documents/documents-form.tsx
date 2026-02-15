@@ -22,7 +22,6 @@ import {
   SelectValue
 } from '@/components/ui/select';
 import { EligibilityStatus } from '@prisma/client';
-import Link from 'next/link';
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -32,13 +31,7 @@ const formSchema = z.object({
     message: 'Price must be at least 0 pesos.'
   }),
   isAvailable: z.boolean(),
-  eligibility: z.enum(['STUDENT', 'GRADUATED', 'BOTH']),
-  sampleDocs: z
-    .instanceof(File)
-    .refine((file) => file.type === 'application/pdf', {
-      message: 'Only .pdf files are allowed.'
-    })
-    .optional()
+  eligibility: z.enum(['STUDENT', 'GRADUATED', 'BOTH'])
 });
 
 export default function DocumentsForm(data: Partial<Document>) {
@@ -51,28 +44,19 @@ export default function DocumentsForm(data: Partial<Document>) {
       name: data.name || '',
       price: data.price || 0,
       isAvailable: data.isAvailable || false,
-      eligibility: data.eligibility || 'BOTH',
-      sampleDocs: data.sampleDocs ? new File([data.sampleDocs], 'sample.pdf', { type: 'application/pdf' }) : undefined
+      eligibility: data.eligibility || 'BOTH'
     }
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
       setIsLoading(true);
-      if (!values.sampleDocs) {
-        setIsLoading(false);
-        return toast({
-          title: "Document's sample file is required",
-          description: 'Please upload a sample file for the document'
-        });
-      }
-      const form = new FormData();
-      form.append('name', values.name);
-      form.append('price', values.price.toString());
-      form.append('isAvailable', values.isAvailable.toString());
-      form.append('eligibility', values.eligibility);
-      form.append('sampleDocs', values.sampleDocs);
-      const response = await createDocument(form);
+      const response = await createDocument({
+        name: values.name,
+        price: values.price.toString(),
+        isAvailable: values.isAvailable.toString(),
+        eligibility: values.eligibility
+      });
       if (response.id) {
         setIsLoading(false);
         router.push('/dashboard/documents');
@@ -99,15 +83,12 @@ export default function DocumentsForm(data: Partial<Document>) {
     try {
       setIsLoading(true);
       if (data.id) {
-        const form = new FormData();
-        form.append('name', values.name);
-        form.append('price', values.price.toString());
-        form.append('isAvailable', values.isAvailable.toString());
-        form.append('eligibility', values.eligibility);
-        if (values.sampleDocs) {
-          form.append('sampleDocs', values.sampleDocs);
-        }
-        const response = await updateDocument(data.id, form);
+        const response = await updateDocument(data.id, {
+          name: values.name,
+          price: values.price.toString(),
+          isAvailable: values.isAvailable.toString(),
+          eligibility: values.eligibility
+        });
         if (response.id) {
           setIsLoading(false);
           router.push('/dashboard/documents');
@@ -230,36 +211,6 @@ export default function DocumentsForm(data: Partial<Document>) {
                       </Select>
                     </FormControl>
                     <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="sampleDocs"
-                disabled={isLoading}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Sample Docs (.pdf file type only)</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="file"
-                        accept=".pdf"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            field.onChange(file);
-                          }
-                        }}
-                      />
-                    </FormControl>
-                    <FormMessage />
-
-                    {data.sampleDocs && (
-                      <Link href={(data.sampleDocs?.toString() as string) || ''} target="_blank" passHref>
-                        <p className="p-3 text-sm text-blue-500 hover:underline">Preview</p>
-                      </Link>
-                    )}
                   </FormItem>
                 )}
               />

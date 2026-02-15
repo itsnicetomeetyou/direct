@@ -38,92 +38,75 @@ export default function RequestDocument() {
       }).unwrap();
 
       if (data.id) {
-        try {
-          setLoading(false);
-          router.back();
-          toast.success("Document request submitted", {
-            description: "Please wait for the approval",
-          });
-          return dispatch(documentApiSlice.util.resetApiState());
-        } catch (err) {
-          if (err instanceof Error) {
-            return toast.error("Something went wrong", {
-              description: err.message || "Please try again later",
-            });
-          }
-        }
+        router.back();
+        toast.success("Document request submitted", {
+          description: "Please wait for the approval",
+        });
+        return dispatch(documentApiSlice.util.resetApiState());
       }
       if (data?.message === "Document Not Found") {
-        setLoading(false);
         return toast.error("Document Not Found", {
           description: "Please select document",
         });
       }
       if (data?.message === "Delivery Option Not Found") {
-        setLoading(false);
         return toast.error("Delivery Option Not Found", {
           description: "Please select delivery option",
         });
       }
       if (data?.message === "Invalid Schedule") {
-        setLoading(false);
         return toast.error("Invalid Schedule", {
           description: "Please select schedule",
         });
       }
       if (data?.message === "Invalid Payment Option") {
-        setLoading(false);
         return toast.error("Invalid Payment Option", {
           description: "Please select payment option",
         });
       }
       if (data?.message === "Schedule is Required for Selected Delivery Option") {
-        setLoading(false);
         return toast.error("Schedule Required", {
           description: "Schedule is Required for Selected Delivery Option",
         });
       }
       if (data?.message === "Please select a delivery option") {
-        setLoading(false);
         return toast.error("Delivery Option Required", {
           description: "Please select a delivery option",
         });
       }
       if (data?.message === "Google Map pin is required for Lalamove delivery option") {
-        setLoading(false);
         return toast.error("Google Map Pin Required", {
           description: "Google Map pin is required for Lalamove delivery option",
         });
       }
       if (data?.message === "Longitude and Latitude is required for Lalamove delivery option") {
-        setLoading(false);
         return toast.error("Position is Required", {
           description: "Longitude and Latitude is required for Lalamove delivery option",
         });
       }
       if (data?.message === "Additional Address is required for Lalamove delivery option") {
-        setLoading(false);
         return toast.error("Additional Address is Required", {
           description: "Additional Address is required for Lalamove delivery option",
         });
       }
       if (data?.message === "Schedule is already full") {
-        setLoading(false);
         return toast.error("Schedule is already full", {
           description: "Please select another schedule",
         });
       }
-      setLoading(false);
       return toast.error("Something went wrong", {
         description: "Please try again later",
       });
-    } catch (err) {
+    } catch (err: any) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : err?.data?.message || err?.error || "Please try again later";
+      return toast.error("Something went wrong", {
+        description: typeof message === "string" ? message : "Please try again later",
+      });
+    } finally {
       setLoading(false);
-      if (err instanceof Error) {
-        return toast.error("Something went wrong", {
-          description: err.message || "Please try again later",
-        });
-      }
     }
   };
 
