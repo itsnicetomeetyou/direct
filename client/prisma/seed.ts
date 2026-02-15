@@ -18,7 +18,7 @@ async function main() {
   const hashedPassword = await hash('admin123', 12);
   const admin = await prisma.users.create({
     data: {
-      email: 'admin@directplus.com',
+      email: 'admin@directplus-icct.site',
       password: hashedPassword,
       role: 'ADMIN',
       emailVerified: true
@@ -27,7 +27,7 @@ async function main() {
 
   console.log('Admin user created:', admin.email);
   console.log('Login with:');
-  console.log('  Email: admin@directplus.com');
+  console.log('  Email: admin@directplus-icct.site');
   console.log('  Password: admin123');
 }
 
