@@ -40,7 +40,7 @@ async function totalDocumentRequested() {
     const dailyRequestByStatusMap: Record<string, { date: string; status: string; totalRequests: number }> = {};
     totalRequested.forEach((doc) => {
       const date = doc.createdAt.toISOString().split('T')[0];
-      const status = doc.status;
+      const status = doc.status ?? 'PENDING';
       const key = `${date}__${status}`;
       if (!dailyRequestByStatusMap[key]) {
         dailyRequestByStatusMap[key] = { date, status, totalRequests: 0 };
