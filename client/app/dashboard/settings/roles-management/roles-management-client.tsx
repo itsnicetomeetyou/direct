@@ -50,12 +50,12 @@ const TAB_DISPLAY: Record<string, { label: string; description: string }> = {
     label: 'Dashboard',
     description: 'Overview page with statistics and charts'
   },
-  transaction: {
-    label: 'Transaction',
-    description: 'Manage academic document types and pricing'
-  },
   'transaction-list': {
     label: 'Transaction List',
+    description: 'Manage academic document types and pricing'
+  },
+  'order-list': {
+    label: 'Order List',
     description: 'View and manage student document requests'
   },
   settings: {

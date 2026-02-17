@@ -84,6 +84,12 @@ export default function MobileLoginPage() {
               {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
               Log In
             </Button>
+            <Link
+              href="/mobile/forgot-password"
+              className="block text-center text-xs font-medium text-primary hover:underline mt-3"
+            >
+              Forgot Password?
+            </Link>
           </div>
         </form>
 

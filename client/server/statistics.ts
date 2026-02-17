@@ -31,35 +31,40 @@ async function totalDocumentRequested() {
   try {
     const totalRequested = await prisma.requestDocuments.findMany({
       select: {
-        createdAt: true
+        createdAt: true,
+        status: true
       }
     });
 
-    // Group by date and count the requests
-    const dailyRequestMap = totalRequested.reduce(
-      (acc, doc) => {
-        const date = doc.createdAt.toISOString().split('T')[0]; // Format date as YYYY-MM-DD
-        if (!acc[date]) {
-          acc[date] = 0;
-        }
-        acc[date] += 1;
-        return acc;
-      },
-      {} as Record<string, number>
-    );
+    // Group by date and status, count the requests
+    const dailyRequestByStatusMap: Record<string, { date: string; status: string; totalRequests: number }> = {};
+    totalRequested.forEach((doc) => {
+      const date = doc.createdAt.toISOString().split('T')[0];
+      const status = doc.status;
+      const key = `${date}__${status}`;
+      if (!dailyRequestByStatusMap[key]) {
+        dailyRequestByStatusMap[key] = { date, status, totalRequests: 0 };
+      }
+      dailyRequestByStatusMap[key].totalRequests += 1;
+    });
 
-    // Convert the map to an array of objects
-    const dailyRequestData = Object.entries(dailyRequestMap).map(([date, totalRequests]) => ({
-      date,
-      totalRequests
-    }));
+    const dailyRequestData = Object.values(dailyRequestByStatusMap);
+
+    // Calculate percentage change from aggregated daily totals
+    const dailyTotalsMap: Record<string, number> = {};
+    dailyRequestData.forEach(({ date, totalRequests }) => {
+      dailyTotalsMap[date] = (dailyTotalsMap[date] || 0) + totalRequests;
+    });
+    const dailyTotals = Object.entries(dailyTotalsMap)
+      .map(([date, total]) => ({ date, total }))
+      .sort((a, b) => a.date.localeCompare(b.date));
 
     let percentageChangeFromLastData = 0;
-    if (dailyRequestData.length > 1) {
-      const lastData = dailyRequestData[dailyRequestData.length - 1];
-      const previousData = dailyRequestData[dailyRequestData.length - 2];
+    if (dailyTotals.length > 1) {
+      const lastData = dailyTotals[dailyTotals.length - 1];
+      const previousData = dailyTotals[dailyTotals.length - 2];
       percentageChangeFromLastData =
-        ((lastData.totalRequests - previousData.totalRequests) / previousData.totalRequests) * 100;
+        ((lastData.total - previousData.total) / previousData.total) * 100;
     }
 
     return { dailyRequestData, percentageChangeFromLastData, totalRequested: totalRequested.length };

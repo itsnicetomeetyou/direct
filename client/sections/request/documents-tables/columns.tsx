@@ -16,6 +16,95 @@ import {
   AlertDialogTrigger
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select';
+import { RequestDocumentsStatus } from '@prisma/client';
+import { changeStatus } from '@/server/request';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { useToast } from '@/components/ui/use-toast';
+
+const STATUS_CONFIG: Record<string, { color: string; label: string }> = {
+  PENDING: { color: 'bg-[#FFBF61]', label: 'Pending' },
+  PAID: { color: 'bg-[#72BF78]', label: 'Paid' },
+  PROCESSING: { color: 'bg-[#FFBF61]', label: 'Processing' },
+  READYTOPICKUP: { color: 'bg-[#36C2CE]', label: 'Ready to Pick Up' },
+  OUTFORDELIVERY: { color: 'bg-[#36C2CE]', label: 'Out for Delivery' },
+  COMPLETED: { color: 'bg-[#72BF78]', label: 'Completed' },
+  CANCELLED: { color: 'bg-[#CC2B52]', label: 'Cancelled' }
+};
+
+function StatusCell({ data }: { data: TDocumentRequest }) {
+  const [isUpdating, setIsUpdating] = useState(false);
+  const router = useRouter();
+  const { toast } = useToast();
+  const currentStatus = data.status ?? 'PENDING';
+
+  const handleStatusChange = async (newStatus: string) => {
+    if (newStatus === currentStatus) return;
+    try {
+      setIsUpdating(true);
+      const response = await changeStatus({
+        requestDocumentId: data.id,
+        status: newStatus as RequestDocumentsStatus,
+        recipient: {
+          coordinates: {
+            lat: data.latitude ?? '',
+            lng: data.longitude ?? ''
+          },
+          address: data.address ?? ''
+        }
+      });
+      if (response) {
+        toast({
+          title: 'Status Updated',
+          description: `Status changed to ${STATUS_CONFIG[newStatus]?.label ?? newStatus}`
+        });
+        router.refresh();
+      }
+    } catch (err) {
+      toast({
+        title: 'Failed to update status',
+        description: err instanceof Error ? err.message : 'Something went wrong',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const statusColor = STATUS_CONFIG[currentStatus]?.color ?? 'bg-gray-400';
+
+  return (
+    <div className="flex items-center gap-2">
+      <div className={`h-2.5 w-2.5 shrink-0 rounded-full ${statusColor}`} />
+      <Select
+        value={currentStatus}
+        onValueChange={handleStatusChange}
+        disabled={isUpdating}
+      >
+        <SelectTrigger className="h-8 w-[170px] text-xs font-medium">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {Object.values(RequestDocumentsStatus).map((status) => (
+            <SelectItem key={status} value={status}>
+              <div className="flex items-center gap-2">
+                <div className={`h-2 w-2 rounded-full ${STATUS_CONFIG[status]?.color ?? 'bg-gray-400'}`} />
+                {STATUS_CONFIG[status]?.label ?? status}
+              </div>
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
 
 export const columns: ColumnDef<TDocumentRequest>[] = [
   {
@@ -66,7 +155,7 @@ export const columns: ColumnDef<TDocumentRequest>[] = [
             <AlertDialogDescription>
               <ul className=" list-disc">
                 {row?.original?.DocumentSelected?.map((doc) => (
-                  <li>
+                  <li key={doc.id}>
                     <p>{doc?.document?.name ?? ''}</p>
                   </li>
                 ))}
@@ -83,30 +172,7 @@ export const columns: ColumnDef<TDocumentRequest>[] = [
   {
     accessorKey: 'status',
     header: 'STATUS',
-    cell: ({ row }) => {
-      if (row?.original?.status === 'PENDING') {
-        return <Badge className="bg-[#FFBF61] hover:bg-[#FFBF6180]">{row?.original?.status}</Badge>;
-      }
-      if (row?.original?.status === 'PAID') {
-        return <Badge className="bg-[#72BF78] hover:bg-[#72BF7880]">{row?.original?.status}</Badge>;
-      }
-      if (row?.original?.status === 'PROCESSING') {
-        return <Badge className="bg-[#FFBF61] hover:bg-[#FFBF6180]">{row?.original?.status}</Badge>;
-      }
-      if (row?.original?.status === 'READYTOPICKUP') {
-        return <Badge className="bg-[#36C2CE] hover:bg-[#36C2CE80]">{row?.original?.status}</Badge>;
-      }
-      if (row.original?.status === 'OUTFORDELIVERY') {
-        return <Badge className="bg-[#36C2CE] hover:bg-[#36C2CE80]">{row?.original?.status}</Badge>;
-      }
-      if (row?.original?.status === 'COMPLETED') {
-        return <Badge className="bg-[#72BF78] hover:bg-[#72BF7880]">{row?.original?.status}</Badge>;
-      }
-      if (row?.original?.status === 'CANCELLED') {
-        return <Badge className="bg-[#CC2B52] hover:bg-[#CC2B5280]">{row?.original?.status}</Badge>;
-      }
-      return <Badge variant="secondary">Unknown</Badge>;
-    }
+    cell: ({ row }) => <StatusCell data={row.original} />
   },
   {
     accessorKey: 'selectedSchedule',

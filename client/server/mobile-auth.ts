@@ -219,6 +219,102 @@ export async function mobileVerifyOtp(otpToken: string, otp: string) {
   }
 }
 
+// ─── Forgot Password (Send OTP) ─────────────────────────
+
+export async function mobileForgotPassword(email: string) {
+  try {
+    const user = await prisma.users.findUnique({ where: { email } });
+    if (!user) return { error: 'No account found with this email.' };
+
+    const otp = generateOtp();
+    const hashedOtp = await hash(otp, 12);
+
+    const otpToken = await createToken(
+      { otp: hashedOtp, email: user.email, sub: user.id, purpose: 'reset' },
+      '10m'
+    );
+
+    await sendCustomEmail(
+      email,
+      'Password Reset - DiReCT',
+      `
+      <div style="font-family: Arial, sans-serif; line-height: 1.6; background-color: #f3f4f6; padding: 20px; border-radius: 8px; max-width: 600px; margin: auto;">
+        <div style="background-color: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+          <h2 style="color: #3b82f6; text-align: center; font-size: 24px; font-weight: 600;">Password Reset</h2>
+          <p style="font-size: 16px; color: #374151; margin-top: 16px;">Dear User,</p>
+          <p style="font-size: 16px; color: #374151;">You requested to reset your password. Use the following OTP code:</p>
+          <div style="font-size: 32px; font-weight: bold; color: #1f2937; text-align: center; margin: 20px 0; padding: 10px; border: 1px dashed #3b82f6; border-radius: 8px; letter-spacing: 8px;">
+            ${otp}
+          </div>
+          <p style="font-size: 14px; color: #6b7280;">This code expires in 10 minutes. If you did not request this, please ignore this email.</p>
+        </div>
+      </div>
+      `
+    );
+
+    return { success: true, otpToken };
+  } catch (err) {
+    console.error('[mobileForgotPassword]', err);
+    return { error: 'Failed to send reset code. Please try again.' };
+  }
+}
+
+// ─── Verify Reset OTP ───────────────────────────────────
+
+export async function mobileVerifyResetOtp(otpToken: string, otp: string) {
+  try {
+    const payload = await verifyToken(otpToken);
+    if (!payload?.sub || !payload?.otp || payload?.purpose !== 'reset') {
+      return { error: 'Invalid or expired token.' };
+    }
+
+    const valid = await compare(otp, payload.otp as string);
+    if (!valid) return { error: 'Invalid OTP code.' };
+
+    // Generate a short-lived reset token
+    const resetToken = await createToken(
+      { sub: payload.sub, email: payload.email, purpose: 'reset-confirm' },
+      '5m'
+    );
+
+    return { success: true, resetToken };
+  } catch (err) {
+    console.error('[mobileVerifyResetOtp]', err);
+    return { error: 'Verification failed. Please try again.' };
+  }
+}
+
+// ─── Reset Password ─────────────────────────────────────
+
+export async function mobileResetPassword(resetToken: string, newPassword: string) {
+  try {
+    if (!newPassword || newPassword.length < 6) {
+      return { error: 'Password must be at least 6 characters.' };
+    }
+
+    const payload = await verifyToken(resetToken);
+    if (!payload?.sub || payload?.purpose !== 'reset-confirm') {
+      return { error: 'Invalid or expired reset link. Please start over.' };
+    }
+
+    const user = await prisma.users.findUnique({
+      where: { id: payload.sub as string },
+    });
+    if (!user) return { error: 'User not found.' };
+
+    const hashedPassword = await hash(newPassword, 12);
+    await prisma.users.update({
+      where: { id: user.id },
+      data: { password: hashedPassword },
+    });
+
+    return { success: true };
+  } catch (err) {
+    console.error('[mobileResetPassword]', err);
+    return { error: 'Password reset failed. Please try again.' };
+  }
+}
+
 // ─── Save User Information ──────────────────────────────
 
 export async function mobileSaveUserInfo(data: {
@@ -230,6 +326,7 @@ export async function mobileSaveUserInfo(data: {
   lrn: string;
   address: string;
   phoneNo: string;
+  birthDate?: string;
 }) {
   try {
     const session = await getMobileSession();
@@ -241,9 +338,12 @@ export async function mobileSaveUserInfo(data: {
     });
     if (existing) return { error: 'User information already exists.' };
 
+    const { birthDate, ...rest } = data;
+
     await prisma.userInformation.create({
       data: {
-        ...data,
+        ...rest,
+        birthDate: birthDate ? new Date(birthDate) : null,
         userId: session.id,
       },
     });

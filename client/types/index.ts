@@ -65,6 +65,7 @@ export interface OrderSliceInitialState {
 
 export interface DocumentItemProps extends MenuItem {
   isSelected: boolean;
+  sampleDocs?: string | null;
 }
 
 export interface IOrderDocument {

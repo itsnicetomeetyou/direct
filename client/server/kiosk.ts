@@ -109,6 +109,33 @@ export async function fetchStudentNumber(studentNo: string) {
   return studentNumber;
 }
 
+export async function verifyStudentBirthDate(
+  studentNo: string,
+  birthMonth: number,
+  birthYear: number
+): Promise<{ verified: boolean; error?: string }> {
+  try {
+    const student = await prisma.userInformation.findFirst({
+      where: { studentNo: { equals: studentNo } },
+      select: { birthDate: true, firstName: true },
+    });
+
+    if (!student) return { verified: false, error: 'Student not found.' };
+    if (!student.birthDate) return { verified: false, error: 'No birth date on file. Please contact the registrar.' };
+
+    const dbMonth = student.birthDate.getMonth() + 1; // JS months are 0-indexed
+    const dbYear = student.birthDate.getFullYear();
+
+    if (dbMonth === birthMonth && dbYear === birthYear) {
+      return { verified: true };
+    }
+
+    return { verified: false, error: 'Birth month/year does not match our records.' };
+  } catch {
+    return { verified: false, error: 'Verification failed. Please try again.' };
+  }
+}
+
 export async function fetchAllDocuments(studentNo: string) {
   const users = await fetchStudentNumber(studentNo);
   const docs = await prisma.documents.findMany({

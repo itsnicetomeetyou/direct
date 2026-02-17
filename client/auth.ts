@@ -24,7 +24,7 @@ export const { auth, handlers, signOut, signIn } = NextAuth({
           const userData = await prisma.users.findFirst({
             where: {
               email: credentials.email ?? '',
-              role: 'ADMIN'
+              role: { not: 'STUDENT' }
             }
           });
           if (!userData) return null;

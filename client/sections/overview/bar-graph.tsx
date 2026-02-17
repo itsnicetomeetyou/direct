@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { Bar, BarChart, CartesianGrid, XAxis } from 'recharts';
+import { Line, LineChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 
 import {
   Card,
@@ -30,7 +30,7 @@ const chartConfig = {
   },
   totalRequests: {
     label: 'Total Requested',
-    color: 'hsl(30, 90%, 56%)'
+    color: 'hsl(221, 83%, 53%)'
   }
 } satisfies ChartConfig;
 
@@ -42,6 +42,17 @@ const TIME_RANGES: { value: TimeRange; label: string }[] = [
   { value: '1month', label: 'Last Month' },
   { value: '6months', label: 'Last 6 Months' },
   { value: '1year', label: 'Last Year' }
+];
+
+const TRANSACTION_STATUSES: { value: string; label: string }[] = [
+  { value: 'ALL', label: 'All Transactions' },
+  { value: 'PENDING', label: 'Pending' },
+  { value: 'PAID', label: 'Paid' },
+  { value: 'PROCESSING', label: 'Processing' },
+  { value: 'READYTOPICKUP', label: 'Ready to Pick Up' },
+  { value: 'OUTFORDELIVERY', label: 'Out for Delivery' },
+  { value: 'COMPLETED', label: 'Completed' },
+  { value: 'CANCELLED', label: 'Cancelled' }
 ];
 
 function getDateThreshold(range: TimeRange): Date {
@@ -83,14 +94,32 @@ function getDateThreshold(range: TimeRange): Date {
 export function BarGraph({
   chartData
 }: {
-  chartData: Array<{ date: string; totalRequests: number }>;
+  chartData: Array<{ date: string; totalRequests: number; status: string }>;
 }) {
   const [timeRange, setTimeRange] = React.useState<TimeRange>('1month');
+  const [statusFilter, setStatusFilter] = React.useState<string>('ALL');
 
   const filteredData = React.useMemo(() => {
     const threshold = getDateThreshold(timeRange);
-    return chartData.filter((item) => new Date(item.date) >= threshold);
-  }, [chartData, timeRange]);
+
+    // Filter by time range
+    let data = chartData.filter((item) => new Date(item.date) >= threshold);
+
+    // Filter by transaction status
+    if (statusFilter !== 'ALL') {
+      data = data.filter((item) => item.status === statusFilter);
+    }
+
+    // Aggregate by date (sum totalRequests for the same date)
+    const aggregated: Record<string, number> = {};
+    data.forEach((item) => {
+      aggregated[item.date] = (aggregated[item.date] || 0) + item.totalRequests;
+    });
+
+    return Object.entries(aggregated)
+      .map(([date, totalRequests]) => ({ date, totalRequests }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+  }, [chartData, timeRange, statusFilter]);
 
   const total = React.useMemo(
     () => ({
@@ -106,7 +135,7 @@ export function BarGraph({
     <Card>
       <CardHeader className="flex flex-col items-stretch space-y-0 border-b p-0 sm:flex-row">
         <div className="flex flex-1 flex-col justify-center gap-1 px-6 py-5 sm:py-6">
-          <CardTitle>Bar Chart - Requested Documents</CardTitle>
+          <CardTitle>Requested Documents</CardTitle>
           <CardDescription>
             Showing total of student requesting academic documents
           </CardDescription>
@@ -123,7 +152,22 @@ export function BarGraph({
         </div>
       </CardHeader>
       <CardContent className="px-2 sm:p-6">
-        <div className="mb-4 flex items-center justify-end">
+        <div className="mb-4 flex items-center justify-end gap-2">
+          <Select
+            value={statusFilter}
+            onValueChange={setStatusFilter}
+          >
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Filter by status" />
+            </SelectTrigger>
+            <SelectContent>
+              {TRANSACTION_STATUSES.map((status) => (
+                <SelectItem key={status.value} value={status.value}>
+                  {status.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Select
             value={timeRange}
             onValueChange={(val) => setTimeRange(val as TimeRange)}
@@ -144,7 +188,7 @@ export function BarGraph({
           config={chartConfig}
           className="aspect-auto h-[280px] w-full"
         >
-          <BarChart
+          <LineChart
             accessibilityLayer
             data={filteredData}
             margin={{
@@ -167,6 +211,12 @@ export function BarGraph({
                 });
               }}
             />
+            <YAxis
+              tickLine={false}
+              axisLine={false}
+              tickMargin={8}
+              allowDecimals={false}
+            />
             <ChartTooltip
               content={
                 <ChartTooltipContent
@@ -182,12 +232,15 @@ export function BarGraph({
                 />
               }
             />
-            <Bar
+            <Line
               dataKey="totalRequests"
-              fill="var(--color-totalRequests)"
-              radius={[4, 4, 0, 0]}
+              type="monotone"
+              stroke="var(--color-totalRequests)"
+              strokeWidth={2}
+              dot={{ r: 3, fill: 'var(--color-totalRequests)' }}
+              activeDot={{ r: 5 }}
             />
-          </BarChart>
+          </LineChart>
         </ChartContainer>
         {filteredData.length === 0 && (
           <p className="py-8 text-center text-sm text-muted-foreground">

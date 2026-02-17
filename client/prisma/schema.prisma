@@ -33,6 +33,7 @@ model UserInformation {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   phoneNo      String
+  birthDate    DateTime?
   users        Users    @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 

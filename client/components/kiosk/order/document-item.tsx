@@ -3,8 +3,9 @@ import { useAppDispatch } from '@/hooks/redux';
 import { formatCurrency } from '@/lib/utils';
 import { addToOrder, removeFromOrder } from '@/store/kiosk/orderSlice';
 import { DocumentItemProps } from '@/types';
-import { X } from 'lucide-react';
+import { X, FileText } from 'lucide-react';
 import { Poppins } from 'next/font/google';
+import Image from 'next/image';
 import React from 'react';
 
 const poppins = Poppins({
@@ -24,7 +25,24 @@ export default function DocumentItem(item: DocumentItemProps) {
         <div className="absolute -right-2 -top-2 rounded-full bg-red-500 text-white hover:text-white">
           <X className="rounded-full p-1 hover:bg-red-500" size={30} />
         </div>
-        <div className="flex h-full flex-col items-center justify-between p-4 py-10">
+        <div className="flex h-full flex-col items-center justify-between p-4 py-6">
+          {item.sampleDocs && (
+            <div className="mb-3 overflow-hidden rounded-lg">
+              {item.sampleDocs.match(/\.pdf$/i) ? (
+                <div className="flex h-24 w-24 items-center justify-center rounded-lg bg-white/20">
+                  <FileText className="h-10 w-10 text-white" />
+                </div>
+              ) : (
+                <Image
+                  src={item.sampleDocs}
+                  alt={item.name}
+                  width={96}
+                  height={96}
+                  className="h-24 w-24 object-cover"
+                />
+              )}
+            </div>
+          )}
           <div className="text-center">
             <h3 className={`font-semibold text-white ${poppins.className} text-lg font-semibold`}>{item.name}</h3>
             {Number(item.price) > 0 && (
@@ -39,7 +57,24 @@ export default function DocumentItem(item: DocumentItemProps) {
   }
   return (
     <button key={item.id} className="rounded-2xl bg-gray-200" onClick={() => dispatch(addToOrder(item))}>
-      <div className="flex h-full flex-col items-center justify-between p-4 py-10">
+      <div className="flex h-full flex-col items-center justify-between p-4 py-6">
+        {item.sampleDocs && (
+          <div className="mb-3 overflow-hidden rounded-lg">
+            {item.sampleDocs.match(/\.pdf$/i) ? (
+              <div className="flex h-24 w-24 items-center justify-center rounded-lg bg-black/5">
+                <FileText className="h-10 w-10 text-muted-foreground" />
+              </div>
+            ) : (
+              <Image
+                src={item.sampleDocs}
+                alt={item.name}
+                width={96}
+                height={96}
+                className="h-24 w-24 object-cover"
+              />
+            )}
+          </div>
+        )}
         <div className="text-center">
           <h3 className={`font-semibold text-black ${poppins.className} text-lg font-semibold`}>{item.name}</h3>
           {Number(item.price) > 0 && (

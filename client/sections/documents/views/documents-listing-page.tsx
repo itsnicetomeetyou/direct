@@ -37,7 +37,7 @@ export default async function DocumentsListingPage({}: TDocumentListingPage) {
         <Breadcrumbs items={breadcrumbItems} />
 
         <div className="flex items-start justify-between">
-          <Heading title={`Transactions List (${totalDocuments})`} description="Manage Academic Document Transaction List" />
+          <Heading title={`Order List (${totalDocuments})`} description="Manage Academic Document Order List" />
 
           <Link href={'/dashboard/documents/new'} className={cn(buttonVariants({ variant: 'default' }))}>
             <Plus className="mr-2 h-4 w-4" /> Add New

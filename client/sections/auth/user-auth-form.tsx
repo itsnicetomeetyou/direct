@@ -46,7 +46,7 @@ export default function UserAuthForm() {
         setIsLoading(false);
         return toast({
           title: 'Sign in failed',
-          description: 'Please check your email and password',
+          description: 'Invalid credentials. Students please use the mobile portal to log in.',
           variant: 'destructive'
         });
       }

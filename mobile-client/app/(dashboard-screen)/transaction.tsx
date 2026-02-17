@@ -146,7 +146,7 @@ export default function Transaction() {
           if (response.data.id) {
             dispatch(setCreateOrderSenderStopId(response.data.stops[0].id || ""));
             dispatch(setCreateOrderQuotationId(response.data.id));
-            dispatch(setCreateOrderRecipientName("Kurt Russelle Marmol"));
+            dispatch(setCreateOrderRecipientName("DiReCT Admin"));
             dispatch(setCreateOrderRecipientPhoneNumber("+639565993908"));
             dispatch(setCreateOrderRecipientRemarks("Please deliver to the guard house"));
             dispatch(setCreateOrderRecipientStopId(response.data.stops[1].id || ""));
@@ -352,7 +352,7 @@ export default function Transaction() {
                   fontSize: moderateScale(10),
                 }}
               >
-                Designed and Developed by Kurt Russelle Marmol
+                Direct Ver 2.0 Designed and Developed by Computer Engineering Students of ICCT Cainta Campus
               </Text>
             </View>
           </View>

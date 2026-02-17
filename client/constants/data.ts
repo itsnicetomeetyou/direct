@@ -176,16 +176,16 @@ export const navItems: NavItem[] = [
     label: 'Dashboard'
   },
   {
-    title: 'Transaction',
+    title: 'Transaction List',
     href: '/dashboard/documents',
     icon: 'billing',
-    label: 'transaction'
+    label: 'transaction-list'
   },
   {
-    title: 'Transaction List',
+    title: 'Order List',
     href: '/dashboard/request',
     icon: 'post',
-    label: 'transaction-list'
+    label: 'order-list'
   },
   {
     title: 'Settings',

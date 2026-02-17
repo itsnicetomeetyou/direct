@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { getMobileSession, mobileGetProfile } from '@/server/mobile-auth';
 import MobileLogoutButton from '@/components/mobile/logout-button';
-import { User, Mail, GraduationCap, Phone, MapPin, Calendar } from 'lucide-react';
+import { User, Mail, GraduationCap, Phone, MapPin, Calendar, Cake } from 'lucide-react';
 
 export default async function MobileProfilePage() {
   const session = await getMobileSession();
@@ -47,6 +47,17 @@ export default async function MobileProfilePage() {
           <>
             <InfoCard icon={GraduationCap} label="Student No." value={info.studentNo} />
             <InfoCard icon={Phone} label="Phone" value={info.phoneNo} />
+            {info.birthDate && (
+              <InfoCard
+                icon={Cake}
+                label="Birth Date"
+                value={new Date(info.birthDate).toLocaleDateString('en-US', {
+                  month: 'long',
+                  day: 'numeric',
+                  year: 'numeric',
+                })}
+              />
+            )}
             <InfoCard icon={MapPin} label="Address" value={info.address} />
           </>
         )}

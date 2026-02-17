@@ -19,6 +19,7 @@ export default function MobileRegisterInfoPage() {
     lastName: '',
     phoneNo: '',
     address: '',
+    birthDate: '',
     studentNo: '',
     specialOrder: '',
     lrn: '',
@@ -30,7 +31,7 @@ export default function MobileRegisterInfoPage() {
     setForm((prev) => ({ ...prev, [key]: value }));
 
   const canGoNext = () => {
-    if (step === 0) return form.firstName && form.lastName && form.phoneNo && form.address;
+    if (step === 0) return form.firstName && form.lastName && form.phoneNo && form.address && form.birthDate;
     if (step === 1) return form.studentNo && form.lrn;
     return true;
   };
@@ -82,6 +83,10 @@ export default function MobileRegisterInfoPage() {
             <Input placeholder="Middle Name" value={form.middleName} onChange={(e) => update('middleName', e.target.value)} className="h-11 rounded-lg bg-muted/50" />
             <Input placeholder="Last Name *" value={form.lastName} onChange={(e) => update('lastName', e.target.value)} className="h-11 rounded-lg bg-muted/50" required />
             <Input placeholder="Phone Number *" value={form.phoneNo} onChange={(e) => update('phoneNo', e.target.value)} className="h-11 rounded-lg bg-muted/50" required />
+            <div>
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">Birth Date *</label>
+              <Input type="date" value={form.birthDate} onChange={(e) => update('birthDate', e.target.value)} className="h-11 rounded-lg bg-muted/50" required max={new Date().toISOString().split('T')[0]} />
+            </div>
             <Input placeholder="Address *" value={form.address} onChange={(e) => update('address', e.target.value)} className="h-11 rounded-lg bg-muted/50" required />
           </div>
         )}
@@ -100,6 +105,7 @@ export default function MobileRegisterInfoPage() {
             <div className="rounded-lg bg-muted/50 p-3 space-y-1">
               <p><span className="text-muted-foreground">Name:</span> {form.firstName} {form.middleName} {form.lastName}</p>
               <p><span className="text-muted-foreground">Phone:</span> {form.phoneNo}</p>
+              <p><span className="text-muted-foreground">Birth Date:</span> {form.birthDate ? new Date(form.birthDate + 'T00:00:00').toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : ''}</p>
               <p><span className="text-muted-foreground">Address:</span> {form.address}</p>
             </div>
             <h3 className="pt-2 font-semibold text-muted-foreground">Academic</h3>

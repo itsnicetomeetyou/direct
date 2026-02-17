@@ -137,7 +137,7 @@ export default function HomeScreen() {
               color: "#fff",
             }}
           >
-            Designed & Developed by Kurt Russelle Marmol
+            Direct Ver 2.0 Designed & Developed by Computer Engineering Students of ICCT Cainta Campus
           </Text>
         </View>
       </View>

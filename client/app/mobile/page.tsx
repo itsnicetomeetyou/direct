@@ -45,7 +45,7 @@ export default async function MobileWelcomePage() {
         </Link>
 
         <p className="pt-4 text-center text-[10px] text-white/70">
-          Designed &amp; Developed by Kurt Russelle Marmol
+          Direct Ver 2.0 Designed &amp; Developed by Computer Engineering Students of ICCT Cainta Campus
         </p>
       </div>
     </div>

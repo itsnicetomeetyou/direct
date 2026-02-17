@@ -218,8 +218,8 @@ export async function seedOrderStatuses() {
 // All configurable tab keys matching navItems labels
 const ALL_TAB_KEYS = [
   'Dashboard',
-  'transaction',
   'transaction-list',
+  'order-list',
   'settings',
   'payment-options',
   'shipping-options',

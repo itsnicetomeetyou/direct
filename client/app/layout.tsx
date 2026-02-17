@@ -14,11 +14,10 @@ const inter = Inter({ subsets: ['latin'] });
 export const metadata: Metadata = {
   title: 'DiReCT: Digital Record and Credential Transaction',
   description: 'Digital Record and Credential Transaction',
-  creator: 'Kurt Russelle Marmol',
+  creator: 'Computer Engineering Students of ICCT Cainta Campus',
   authors: [
     {
-      name: 'Kurt Russelle Marmol',
-      url: 'https://jkrmarmol.github.io'
+      name: 'Computer Engineering Students of ICCT Cainta Campus'
     }
   ]
 };

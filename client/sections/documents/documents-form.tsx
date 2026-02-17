@@ -7,7 +7,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { createDocument, updateDocument } from '@/server/document';
-import { useState } from 'react';
+import { uploadToCloudinary } from '@/server/kiosk';
+import { useRef, useState } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import { useRouter } from 'next/navigation';
 import { Switch } from '@/components/ui/switch';
@@ -22,6 +23,8 @@ import {
   SelectValue
 } from '@/components/ui/select';
 import { EligibilityStatus } from '@prisma/client';
+import { Upload, X, FileText } from 'lucide-react';
+import Image from 'next/image';
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -36,6 +39,10 @@ const formSchema = z.object({
 
 export default function DocumentsForm(data: Partial<Document>) {
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [sampleDocsUrl, setSampleDocsUrl] = useState<string | null>(data.sampleDocs ?? null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(data.sampleDocs ?? null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const router = useRouter();
   const form = useForm<z.infer<typeof formSchema>>({
@@ -48,14 +55,62 @@ export default function DocumentsForm(data: Partial<Document>) {
     }
   });
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
+    if (!allowedTypes.includes(file.type)) {
+      return toast({
+        title: 'Invalid file type',
+        description: 'Please upload an image (JPG, PNG, WebP) or PDF file.',
+        variant: 'destructive'
+      });
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      return toast({
+        title: 'File too large',
+        description: 'File must be less than 5MB.',
+        variant: 'destructive'
+      });
+    }
+
+    setSelectedFile(file);
+    if (file.type.startsWith('image/')) {
+      setPreviewUrl(URL.createObjectURL(file));
+    } else {
+      setPreviewUrl(null);
+    }
+  };
+
+  const removeFile = () => {
+    setSelectedFile(null);
+    setPreviewUrl(null);
+    setSampleDocsUrl(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  async function uploadFile(): Promise<string | null> {
+    if (!selectedFile) return sampleDocsUrl;
+    const formData = new FormData();
+    formData.append('sampleDocs', selectedFile);
+    const result = await uploadToCloudinary(formData);
+    return result.secure_url;
+  }
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
       setIsLoading(true);
+      const uploadedUrl = await uploadFile();
       const response = await createDocument({
         name: values.name,
         price: values.price.toString(),
         isAvailable: values.isAvailable.toString(),
-        eligibility: values.eligibility
+        eligibility: values.eligibility,
+        sampleDocs: uploadedUrl
       });
       if (response.id) {
         setIsLoading(false);
@@ -83,11 +138,13 @@ export default function DocumentsForm(data: Partial<Document>) {
     try {
       setIsLoading(true);
       if (data.id) {
+        const uploadedUrl = await uploadFile();
         const response = await updateDocument(data.id, {
           name: values.name,
           price: values.price.toString(),
           isAvailable: values.isAvailable.toString(),
-          eligibility: values.eligibility
+          eligibility: values.eligibility,
+          sampleDocs: uploadedUrl
         });
         if (response.id) {
           setIsLoading(false);
@@ -216,7 +273,60 @@ export default function DocumentsForm(data: Partial<Document>) {
               />
             </div>
 
-            <Button type="submit">{!data.id ? 'Submit' : 'Update'}</Button>
+            <div>
+              <FormLabel>Sample Document</FormLabel>
+              <p className="mb-2 text-sm text-muted-foreground">
+                Upload a sample image of the document (JPG, PNG, WebP, or PDF). Max 5MB.
+              </p>
+
+              {(previewUrl || (sampleDocsUrl && !selectedFile)) ? (
+                <div className="relative inline-block">
+                  {(previewUrl || sampleDocsUrl)?.match(/\.pdf$/i) ? (
+                    <div className="flex h-48 w-48 flex-col items-center justify-center rounded-lg border bg-muted/30">
+                      <FileText className="mb-2 h-12 w-12 text-muted-foreground" />
+                      <span className="text-xs text-muted-foreground">PDF Document</span>
+                    </div>
+                  ) : (
+                    <Image
+                      src={previewUrl || sampleDocsUrl || ''}
+                      alt="Sample document preview"
+                      width={192}
+                      height={192}
+                      className="h-48 w-48 rounded-lg border object-cover"
+                    />
+                  )}
+                  <button
+                    type="button"
+                    onClick={removeFile}
+                    className="absolute -right-2 -top-2 rounded-full bg-red-500 p-1 text-white hover:bg-red-600"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              ) : (
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex h-48 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/25 transition-colors hover:border-muted-foreground/50"
+                >
+                  <Upload className="mb-2 h-8 w-8 text-muted-foreground" />
+                  <span className="text-sm font-medium text-muted-foreground">Click to upload sample document</span>
+                  <span className="mt-1 text-xs text-muted-foreground">JPG, PNG, WebP, or PDF</span>
+                </div>
+              )}
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,application/pdf"
+                onChange={handleFileSelect}
+                className="hidden"
+                disabled={isLoading}
+              />
+            </div>
+
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? 'Saving...' : !data.id ? 'Submit' : 'Update'}
+            </Button>
           </form>
         </Form>
       </CardContent>

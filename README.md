@@ -794,6 +794,6 @@ done
 
 ---
 
-Developed and Created by: [Kurt Russelle Marmol](https://github.com/jkrmarmol)
+Direct Ver 2.0 Designed & Developed by Computer Engineering Students of ICCT Cainta Campus
 
 **Last Updated**: December 2025
