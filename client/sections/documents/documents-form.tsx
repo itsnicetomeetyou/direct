@@ -95,10 +95,18 @@ export default function DocumentsForm(data: Partial<Document>) {
 
   async function uploadFile(): Promise<string | null> {
     if (!selectedFile) return sampleDocsUrl;
-    const formData = new FormData();
-    formData.append('sampleDocs', selectedFile);
-    const result = await uploadToCloudinary(formData);
-    return result.secure_url;
+    try {
+      const formData = new FormData();
+      formData.append('sampleDocs', selectedFile);
+      const result = await uploadToCloudinary(formData);
+      if (!result || !result.secure_url) {
+        throw new Error('Upload succeeded but no URL returned');
+      }
+      return result.secure_url;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'File upload failed. Please try again.';
+      throw new Error(message);
+    }
   }
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
