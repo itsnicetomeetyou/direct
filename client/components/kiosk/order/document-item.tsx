@@ -3,7 +3,7 @@ import { useAppDispatch } from '@/hooks/redux';
 import { formatCurrency } from '@/lib/utils';
 import { addToOrder, removeFromOrder } from '@/store/kiosk/orderSlice';
 import { DocumentItemProps } from '@/types';
-import { X } from 'lucide-react';
+import { X, FileText } from 'lucide-react';
 import { Poppins } from 'next/font/google';
 import Image from 'next/image';
 import React from 'react';
@@ -12,29 +12,6 @@ const poppins = Poppins({
   weight: ['100', '200', '300', '400', '600', '900'],
   subsets: ['latin']
 });
-
-function SampleDocThumbnail({ src, alt }: { src: string; alt: string }) {
-  const isPdf = /\.pdf$/i.test(src);
-  if (isPdf) {
-    return (
-      <iframe
-        src={src}
-        title={alt}
-        className="h-24 w-24 rounded-lg border-0"
-        style={{ pointerEvents: 'none' }}
-      />
-    );
-  }
-  return (
-    <Image
-      src={src}
-      alt={alt}
-      width={96}
-      height={96}
-      className="h-24 w-24 object-cover"
-    />
-  );
-}
 
 export default function DocumentItem(item: DocumentItemProps) {
   const dispatch = useAppDispatch();
@@ -51,7 +28,19 @@ export default function DocumentItem(item: DocumentItemProps) {
         <div className="flex h-full flex-col items-center justify-between p-4 py-6">
           {item.sampleDocs && (
             <div className="mb-3 overflow-hidden rounded-lg">
-              <SampleDocThumbnail src={item.sampleDocs} alt={item.name} />
+              {item.sampleDocs.match(/\.pdf$/i) ? (
+                <div className="flex h-24 w-24 items-center justify-center rounded-lg bg-white/20">
+                  <FileText className="h-10 w-10 text-white" />
+                </div>
+              ) : (
+                <Image
+                  src={item.sampleDocs}
+                  alt={item.name}
+                  width={96}
+                  height={96}
+                  className="h-24 w-24 object-cover"
+                />
+              )}
             </div>
           )}
           <div className="text-center">
@@ -71,7 +60,19 @@ export default function DocumentItem(item: DocumentItemProps) {
       <div className="flex h-full flex-col items-center justify-between p-4 py-6">
         {item.sampleDocs && (
           <div className="mb-3 overflow-hidden rounded-lg">
-            <SampleDocThumbnail src={item.sampleDocs} alt={item.name} />
+            {item.sampleDocs.match(/\.pdf$/i) ? (
+              <div className="flex h-24 w-24 items-center justify-center rounded-lg bg-black/5">
+                <FileText className="h-10 w-10 text-muted-foreground" />
+              </div>
+            ) : (
+              <Image
+                src={item.sampleDocs}
+                alt={item.name}
+                width={96}
+                height={96}
+                className="h-24 w-24 object-cover"
+              />
+            )}
           </div>
         )}
         <div className="text-center">

@@ -10,6 +10,7 @@ import OrderConfirmation from '@/components/kiosk/dialog/order-confirmation';
 import { setOpenModalConfirmationOrder } from '@/store/kiosk/orderSlice';
 import { useEffect, useState } from 'react';
 import { fetchAllDocuments } from '@/server/kiosk';
+import { FileText } from 'lucide-react';
 import '@cyntler/react-doc-viewer/dist/index.css';
 
 type DocumentItem = {
@@ -123,26 +124,23 @@ export default function Component() {
             </button>
           </div>
 
-          {selectUserOrder.length > 0 &&
-            selectUserOrder.some((o) => menuItems.find((m) => m.id === o.id)?.sampleDocs) && (
+          {selectUserOrder.length > 0 && (
             <div className="mt-6">
               <h3 className={`mb-3 text-lg font-semibold ${poppins.className}`}>Sample Documents</h3>
               <div className="space-y-3">
                 {selectUserOrder.map((orderItem) => {
                   const fullDoc = menuItems.find((m) => m.id === orderItem.id);
                   if (!fullDoc?.sampleDocs) return null;
-                  const isPdf = /\.pdf$/i.test(fullDoc.sampleDocs);
                   return (
                     <div key={orderItem.id} className="overflow-hidden rounded-xl bg-white/10">
                       <div className="px-3 py-2">
                         <p className={`text-sm font-medium ${poppins.className}`}>{orderItem.name}</p>
                       </div>
-                      {isPdf ? (
-                        <iframe
-                          src={fullDoc.sampleDocs}
-                          title={`Sample - ${orderItem.name}`}
-                          className="h-60 w-full border-0 bg-white"
-                        />
+                      {fullDoc.sampleDocs.match(/\.pdf$/i) ? (
+                        <div className="flex h-40 items-center justify-center bg-white/5">
+                          <FileText className="h-10 w-10 text-white/50" />
+                          <span className="ml-2 text-sm text-white/50">PDF Document</span>
+                        </div>
                       ) : (
                         <Image
                           src={fullDoc.sampleDocs}

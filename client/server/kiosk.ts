@@ -6,7 +6,6 @@ import { sendCustomEmail } from './utils/mail.utils';
 import { DeliveryOptions, DocumentPayment, PaymentOptions } from '@prisma/client';
 import { formatCurrency } from '@/lib/utils';
 import moment from 'moment';
-import path from 'path';
 import cloudinary from 'cloudinary';
 
 // Xendit integration - bypassed when API key is not configured
@@ -513,29 +512,35 @@ export async function checkScheduleForDate(date: string): Promise<{
   return transformedResult;
 }
 
-export async function uploadToCloudinary(data: FormData): Promise<{ secure_url: string }> {
-  const file: File | null = data.get('sampleDocs') as unknown as File;
-  if (!file) throw new Error('No file uploaded');
-
+export async function uploadToCloudinary(data: FormData): Promise<{ secure_url: string; public_id: string; format: string }> {
   cloudinary.v2.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
     api_key: process.env.CLOUDINARY_API_KEY,
     api_secret: process.env.CLOUDINARY_API_SECRET
   });
+  const file: File | null = data.get('sampleDocs') as unknown as File;
+
+  if (!file) throw new Error('No file uploaded');
 
   const bytes = await file.arrayBuffer();
   const buffer = Buffer.from(bytes);
 
   const result = await new Promise<cloudinary.UploadApiResponse>((resolve, reject) => {
     const uploadStream = cloudinary.v2.uploader.upload_stream(
-      { folder: 'direct-sample-docs', resource_type: 'auto' },
-      (error, result) => {
-        if (error || !result) return reject(error || new Error('Upload failed'));
-        resolve(result);
+      { resource_type: 'auto', folder: '/direct' },
+      (error, res) => {
+        if (error) return reject(new Error(error.message || 'Cloudinary upload failed'));
+        if (res) return resolve(res);
+        reject(new Error('Upload failed, result is undefined'));
       }
     );
+
     uploadStream.end(buffer);
   });
 
-  return { secure_url: result.secure_url };
+  return {
+    secure_url: result.secure_url,
+    public_id: result.public_id,
+    format: result.format
+  };
 }
