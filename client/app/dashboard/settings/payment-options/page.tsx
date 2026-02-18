@@ -2,7 +2,7 @@ import { Breadcrumbs } from '@/components/breadcrumbs';
 import PageContainer from '@/components/layout/page-container';
 import { Heading } from '@/components/ui/heading';
 import { Separator } from '@/components/ui/separator';
-import { seedPaymentOptions } from '@/server/settings';
+import { fetchPaymentOptions } from '@/server/settings';
 import PaymentOptionsClient from './payment-options-client';
 
 const breadcrumbItems = [
@@ -16,7 +16,7 @@ export const metadata = {
 };
 
 export default async function PaymentOptionsPage() {
-  const options = await seedPaymentOptions();
+  const options = await fetchPaymentOptions();
 
   return (
     <PageContainer scrollable>
