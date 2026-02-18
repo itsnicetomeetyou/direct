@@ -4,16 +4,93 @@ import { TDocumentRequest } from '@/constants/data';
 import { ColumnDef } from '@tanstack/react-table';
 import moment from 'moment';
 import { Badge } from '@/components/ui/badge';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu';
+import { RequestDocumentsStatus } from '@prisma/client';
+import { changeStatus } from '@/server/request';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { useToast } from '@/components/ui/use-toast';
+import { Loader2 } from 'lucide-react';
 
-const STATUS_CONFIG: Record<string, { bg: string; text: string; label: string }> = {
-  PENDING: { bg: 'bg-[#FFBF61]', text: 'text-white', label: 'PENDING' },
-  PAID: { bg: 'bg-[#72BF78]', text: 'text-white', label: 'PAID' },
-  PROCESSING: { bg: 'bg-[#36C2CE]', text: 'text-white', label: 'PROCESSING' },
-  READYTOPICKUP: { bg: 'bg-[#36C2CE]', text: 'text-white', label: 'READYTOPICKUP' },
-  OUTFORDELIVERY: { bg: 'bg-[#FFBF61]', text: 'text-white', label: 'OUTFORDELIVERY' },
-  COMPLETED: { bg: 'bg-[#72BF78]', text: 'text-white', label: 'COMPLETED' },
-  CANCELLED: { bg: 'bg-[#CC2B52]', text: 'text-white', label: 'CANCELLED' }
+const STATUS_CONFIG: Record<string, { bg: string; label: string }> = {
+  PENDING: { bg: 'bg-[#FFBF61]', label: 'PENDING' },
+  PAID: { bg: 'bg-[#72BF78]', label: 'PAID' },
+  PROCESSING: { bg: 'bg-[#36C2CE]', label: 'PROCESSING' },
+  READYTOPICKUP: { bg: 'bg-[#36C2CE]', label: 'READYTOPICKUP' },
+  OUTFORDELIVERY: { bg: 'bg-[#FFBF61]', label: 'OUTFORDELIVERY' },
+  COMPLETED: { bg: 'bg-[#72BF78]', label: 'COMPLETED' },
+  CANCELLED: { bg: 'bg-[#CC2B52]', label: 'CANCELLED' }
 };
+
+function StatusCell({ data }: { data: TDocumentRequest }) {
+  const [isUpdating, setIsUpdating] = useState(false);
+  const router = useRouter();
+  const { toast } = useToast();
+  const currentStatus = data.status ?? 'PENDING';
+  const config = STATUS_CONFIG[currentStatus] ?? { bg: 'bg-gray-400', label: currentStatus };
+
+  const handleStatusChange = async (newStatus: string) => {
+    if (newStatus === currentStatus) return;
+    try {
+      setIsUpdating(true);
+      const response = await changeStatus({
+        requestDocumentId: data.id,
+        status: newStatus as RequestDocumentsStatus,
+        recipient: {
+          coordinates: {
+            lat: data.latitude ?? '',
+            lng: data.longitude ?? ''
+          },
+          address: data.address ?? ''
+        }
+      });
+      if (response) {
+        toast({
+          title: 'Status Updated',
+          description: `Status changed to ${STATUS_CONFIG[newStatus]?.label ?? newStatus}`
+        });
+        router.refresh();
+      }
+    } catch (err) {
+      toast({
+        title: 'Failed to update status',
+        description: err instanceof Error ? err.message : 'Something went wrong',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger disabled={isUpdating} className="cursor-pointer focus:outline-none">
+        <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold text-white ${config.bg}`}>
+          {isUpdating && <Loader2 className="h-3 w-3 animate-spin" />}
+          {config.label}
+        </span>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start">
+        {Object.entries(STATUS_CONFIG).map(([key, val]) => (
+          <DropdownMenuItem
+            key={key}
+            onClick={() => handleStatusChange(key)}
+            className="flex items-center gap-2"
+          >
+            <span className={`h-2.5 w-2.5 rounded-full ${val.bg}`} />
+            {val.label}
+            {key === currentStatus && <span className="ml-auto text-xs text-muted-foreground">current</span>}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
 
 export const columns: ColumnDef<TDocumentRequest>[] = [
   {
@@ -58,15 +135,7 @@ export const columns: ColumnDef<TDocumentRequest>[] = [
   {
     accessorKey: 'status',
     header: 'STATUS',
-    cell: ({ row }) => {
-      const status = row?.original?.status ?? 'PENDING';
-      const config = STATUS_CONFIG[status] ?? { bg: 'bg-gray-400', text: 'text-white', label: status };
-      return (
-        <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${config.bg} ${config.text}`}>
-          {config.label}
-        </span>
-      );
-    }
+    cell: ({ row }) => <StatusCell data={row.original} />
   },
   {
     accessorKey: 'createdAt',
