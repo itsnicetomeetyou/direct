@@ -295,10 +295,9 @@ export default function ViewMoreModal(data: {
                 <Label className="text-right">Reference No.</Label>
                 <p className="col-span-3 text-sm font-bold">{data?.data?.documentPayment?.referenceNumber ?? ''}</p>
               </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label className="text-right">Status</Label>
-                {data.mode === 'VIEW' && <p className="col-span-3 text-sm font-bold">{data.data.status}</p>}
-                {data.mode === 'EDIT' && (
+              {data.mode === 'EDIT' && (
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label className="text-right">Status</Label>
                   <Select onValueChange={onChangeStatus} defaultValue={data?.data?.status ?? ''}>
                     <SelectTrigger className="w-[250px]">
                       <SelectValue placeholder={'Select a status'} />
@@ -308,44 +307,20 @@ export default function ViewMoreModal(data: {
                         <SelectLabel>STATUS</SelectLabel>
                         {Object.values(RequestDocumentsStatus).map((status, index) => {
                           if (status === 'PAID')
-                            return (
-                              <SelectItem value={status} disabled key={index}>
-                                {status}
-                              </SelectItem>
-                            );
+                            return (<SelectItem value={status} disabled key={index}>{status}</SelectItem>);
                           if (status === 'PENDING')
-                            return (
-                              <SelectItem value={status} disabled key={index}>
-                                {status}
-                              </SelectItem>
-                            );
+                            return (<SelectItem value={status} disabled key={index}>{status}</SelectItem>);
                           if (status === 'READYTOPICKUP' && data.data.deliverOptions !== 'PICKUP')
-                            return (
-                              <SelectItem value={status} disabled key={index}>
-                                {status}
-                              </SelectItem>
-                            );
+                            return (<SelectItem value={status} disabled key={index}>{status}</SelectItem>);
                           if (status === 'OUTFORDELIVERY' && data.data.deliverOptions === 'PICKUP')
-                            return (
-                              <SelectItem value={status} disabled key={index}>
-                                {status}
-                              </SelectItem>
-                            );
+                            return (<SelectItem value={status} disabled key={index}>{status}</SelectItem>);
                           if (status === 'PROCESSING' && data?.data?.status === 'PAID')
-                            return (
-                              <SelectItem value={status} key={index}>
-                                {status}
-                              </SelectItem>
-                            );
+                            return (<SelectItem value={status} key={index}>{status}</SelectItem>);
                           if (
                             status === 'PROCESSING' &&
                             (data?.data?.status === 'READYTOPICKUP' || data?.data?.status === 'OUTFORDELIVERY')
                           )
-                            return (
-                              <SelectItem value={status} disabled key={index}>
-                                {status}
-                              </SelectItem>
-                            );
+                            return (<SelectItem value={status} disabled key={index}>{status}</SelectItem>);
                           return (
                             <SelectItem
                               value={status}
@@ -364,8 +339,8 @@ export default function ViewMoreModal(data: {
                       </SelectGroup>
                     </SelectContent>
                   </Select>
-                )}
-              </div>
+                </div>
+              )}
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label className="text-right">Delivery Options</Label>
                 <p className="col-span-3 text-sm font-bold">{data?.data?.deliverOptions ?? ''}</p>
