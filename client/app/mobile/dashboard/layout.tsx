@@ -7,7 +7,7 @@ export default function MobileDashboardLayout({
 }) {
   return (
     <div className="flex min-h-screen flex-col">
-      <main className="flex-1 pb-20">{children}</main>
+      <main className="flex-1 overflow-y-auto pb-20">{children}</main>
       <BottomNav />
     </div>
   );
