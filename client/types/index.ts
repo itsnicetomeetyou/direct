@@ -44,6 +44,7 @@ export interface MenuItem {
   id: string;
   name: string;
   price: number;
+  dayBeforeRelease?: number;
 }
 
 export interface OrderSliceInitialState {

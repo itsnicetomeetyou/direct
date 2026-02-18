@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import Calendar from 'react-calendar';
 import '@/public/styles/Calender.css';
 import { Poppins } from 'next/font/google';
@@ -32,12 +32,18 @@ export default function Schedule() {
     });
   }, []);
 
+  const minDaysAdvance = useMemo(() => {
+    const selectedItems = selectOrderData.orderItem;
+    if (selectedItems.length === 0) return config.minDaysAdvance;
+    const maxFromDocs = Math.max(...selectedItems.map((item) => item.dayBeforeRelease ?? 3));
+    return Math.max(maxFromDocs, config.minDaysAdvance);
+  }, [selectOrderData.orderItem, config.minDaysAdvance]);
+
   const isDisabledDate = (date: Date) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // Calculate min date (minDaysAdvance business days from today, skipping Sundays)
-    let daysToAdd = config.minDaysAdvance;
+    let daysToAdd = minDaysAdvance;
     const minDate = new Date(today);
     while (daysToAdd > 0) {
       minDate.setDate(minDate.getDate() + 1);
@@ -48,7 +54,6 @@ export default function Schedule() {
 
     if (date < today || date < minDate) return true;
 
-    // Check if date is a holiday
     const dateStr = moment(date).format('YYYY-MM-DD');
     if (holidays.some((h) => h.date === dateStr)) return true;
 
@@ -67,7 +72,7 @@ export default function Schedule() {
           Select a date for your order to be ready for pickup
         </p>
         <p className={`text-xs text-black/30 ${poppins.className}`}>
-          Must be at least {config.minDaysAdvance} business days in advance. Sundays and holidays are not available.
+          Must be at least {minDaysAdvance} business days in advance. Sundays and holidays are not available.
         </p>
       </div>
       <div className="h-[50vh] space-y-2 overflow-y-auto overflow-x-hidden p-5">

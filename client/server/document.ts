@@ -45,6 +45,7 @@ export async function createDocument(data: {
   isAvailable: string;
   eligibility: string;
   sampleDocs?: string | null;
+  dayBeforeRelease?: number;
 }) {
   const nameExist = await prisma.documents.findFirst({
     where: { name: data.name }
@@ -56,7 +57,8 @@ export async function createDocument(data: {
       price: data.price,
       isAvailable: data.isAvailable == 'true' ? true : false,
       eligibility: data.eligibility as EligibilityStatus,
-      sampleDocs: data.sampleDocs ?? null
+      sampleDocs: data.sampleDocs ?? null,
+      dayBeforeRelease: data.dayBeforeRelease ?? 3
     }
   });
   return response;
@@ -79,6 +81,7 @@ export async function updateDocument(documentId: string, data: {
   isAvailable: string;
   eligibility: string;
   sampleDocs?: string | null;
+  dayBeforeRelease?: number;
 }) {
   const checkDocumentExist = await prisma.documents.findFirst({
     where: { id: documentId }
@@ -91,7 +94,8 @@ export async function updateDocument(documentId: string, data: {
       price: data.price,
       isAvailable: data.isAvailable == 'true' ? true : false,
       eligibility: data.eligibility as EligibilityStatus,
-      sampleDocs: data.sampleDocs !== undefined ? data.sampleDocs : checkDocumentExist.sampleDocs
+      sampleDocs: data.sampleDocs !== undefined ? data.sampleDocs : checkDocumentExist.sampleDocs,
+      dayBeforeRelease: data.dayBeforeRelease ?? checkDocumentExist.dayBeforeRelease
     }
   });
   return response;
