@@ -46,7 +46,7 @@ export default function MobileRegisterPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-gradient-to-br from-[#E900C4] to-[#007AEB] px-6 pt-20">
+    <div className="flex h-full flex-col overflow-y-auto bg-gradient-to-br from-[#E900C4] to-[#007AEB] px-6 pt-20">
       <div className="mb-8">
         <p className="text-2xl text-white">Create Account</p>
       </div>

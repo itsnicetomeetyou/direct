@@ -212,7 +212,7 @@ export default function MobileRequestPage() {
 
   if (loadingData) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex h-full items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
@@ -228,7 +228,7 @@ export default function MobileRequestPage() {
   })();
 
   return (
-    <div className="min-h-screen overflow-y-auto bg-background px-4 pb-8 pt-6">
+    <div className="h-full overflow-y-auto bg-background px-4 pb-8 pt-6">
       {/* Header */}
       <div className="mb-6 flex items-center gap-3">
         <button

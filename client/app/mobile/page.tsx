@@ -16,7 +16,7 @@ export default async function MobileWelcomePage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-[#E900C4] to-[#007AEB] px-6">
+    <div className="flex h-full flex-col items-center justify-center overflow-y-auto bg-gradient-to-br from-[#E900C4] to-[#007AEB] px-6">
       <div className="flex flex-1 flex-col items-center justify-center">
         <div className="mb-6 flex h-28 w-28 items-center justify-center rounded-full bg-white/20 backdrop-blur">
           <span className="text-4xl font-extrabold text-white">D</span>

@@ -56,7 +56,7 @@ export default function MobileRegisterInfoPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-gradient-to-br from-[#E900C4] to-[#007AEB] px-6 pt-12">
+    <div className="flex h-full flex-col overflow-y-auto bg-gradient-to-br from-[#E900C4] to-[#007AEB] px-6 pt-12">
       <div className="mb-6">
         <p className="text-2xl text-white">Complete Profile</p>
         <p className="mt-1 text-sm text-white/80">Step {step + 1} of 3</p>
