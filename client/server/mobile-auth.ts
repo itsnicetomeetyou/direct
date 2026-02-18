@@ -662,34 +662,40 @@ export async function mobileSubmitRequest(data: {
       return { error: 'Please select a delivery option.' };
     }
 
-    // ── Validate schedule for PICKUP ──
-    if (data.deliveryOption === 'PICKUP') {
-      if (!data.schedule) {
-        return { error: 'Schedule is required for pickup.' };
-      }
-      // Validate schedule date
+    // ── Validate schedule ──
+    if (data.schedule) {
       const scheduleDate = moment(data.schedule).format('YYYY-MM-DD');
       const scheduleCheck = await mobileCheckSchedule(scheduleDate);
       if (scheduleCheck.disabled) {
         return { error: 'Selected schedule date is already full.' };
       }
 
-      // Check min days advance
-      const config = await mobileGetScheduleConfig();
-      const minDate = moment().add(config.minDaysAdvance, 'days').startOf('day');
-      if (moment(data.schedule).isBefore(minDate)) {
+      const selectedDocs = await prisma.documents.findMany({
+        where: { id: { in: data.documentIds } },
+        select: { dayBeforeRelease: true },
+      });
+      const maxMinDays = selectedDocs.length > 0
+        ? Math.max(...selectedDocs.map((d) => d.dayBeforeRelease))
+        : 3;
+
+      let daysToAdd = maxMinDays;
+      const minDate = new Date();
+      minDate.setHours(0, 0, 0, 0);
+      while (daysToAdd > 0) {
+        minDate.setDate(minDate.getDate() + 1);
+        if (minDate.getDay() !== 0) daysToAdd--;
+      }
+      if (moment(data.schedule).isBefore(moment(minDate).startOf('day'))) {
         return {
-          error: `Schedule must be at least ${config.minDaysAdvance} days in advance.`,
+          error: `Schedule must be at least ${maxMinDays} business days in advance.`,
         };
       }
 
-      // Check holidays
       const holidays = await mobileGetHolidays();
       if (holidays.some((h) => h.date === scheduleDate)) {
         return { error: 'Selected date is a holiday.' };
       }
 
-      // Check Sundays
       if (moment(data.schedule).day() === 0) {
         return { error: 'Schedule cannot be on a Sunday.' };
       }
