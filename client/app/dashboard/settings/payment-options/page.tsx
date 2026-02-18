@@ -16,29 +16,20 @@ export const metadata = {
 };
 
 export default async function PaymentOptionsPage() {
-  // Seed defaults if empty, then fetch
   const options = await seedPaymentOptions();
-  const activeCount = options.filter((o) => o.isActive).length;
 
   return (
     <PageContainer scrollable>
       <div className="space-y-4">
         <Breadcrumbs items={breadcrumbItems} />
-        <div className="rounded-md border p-6">
+        <div className="flex items-start justify-between">
           <Heading
             title="Payment Options"
             description="Manage payment methods availability for transactions"
           />
-          <Separator className="my-4" />
-          <PaymentOptionsClient options={options} />
-          <p className="mt-4 text-sm text-muted-foreground">
-            Toggle payment options on or off to control availability in
-            transactions.
-          </p>
-          <p className="text-sm text-muted-foreground">
-            Active options: {activeCount} of {options.length}
-          </p>
         </div>
+        <Separator />
+        <PaymentOptionsClient options={options} />
       </div>
     </PageContainer>
   );
