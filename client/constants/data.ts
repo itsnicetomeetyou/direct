@@ -235,11 +235,5 @@ export const navItems: NavItem[] = [
         label: 'roles-management'
       }
     ]
-  },
-  {
-    title: 'Logout',
-    href: '#',
-    icon: 'login',
-    label: 'logout'
   }
 ];
