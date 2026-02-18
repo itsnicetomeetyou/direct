@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { createDocument, updateDocument } from '@/server/document';
 import { uploadToFtp } from '@/server/kiosk';
-import { useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import { useRouter } from 'next/navigation';
 import { Switch } from '@/components/ui/switch';
@@ -23,7 +23,7 @@ import {
   SelectValue
 } from '@/components/ui/select';
 import { EligibilityStatus } from '@prisma/client';
-import { Upload, X } from 'lucide-react';
+import { Upload, X, Loader2, FileUp } from 'lucide-react';
 import Image from 'next/image';
 
 const formSchema = z.object({
@@ -39,10 +39,45 @@ const formSchema = z.object({
 
 export default function DocumentsForm(data: Partial<Document>) {
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isUploading, setIsUploading] = useState<boolean>(false);
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [sampleDocsUrl, setSampleDocsUrl] = useState<string | null>(data.sampleDocs ?? null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(data.sampleDocs ?? null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const progressInterval = useRef<NodeJS.Timeout | null>(null);
+
+  const startProgress = useCallback(() => {
+    setIsUploading(true);
+    setUploadProgress(0);
+    let current = 0;
+    progressInterval.current = setInterval(() => {
+      current += Math.random() * 8 + 2;
+      if (current > 90) current = 90;
+      setUploadProgress(Math.round(current));
+    }, 300);
+  }, []);
+
+  const finishProgress = useCallback(() => {
+    if (progressInterval.current) clearInterval(progressInterval.current);
+    setUploadProgress(100);
+    setTimeout(() => {
+      setIsUploading(false);
+      setUploadProgress(0);
+    }, 500);
+  }, []);
+
+  const resetProgress = useCallback(() => {
+    if (progressInterval.current) clearInterval(progressInterval.current);
+    setIsUploading(false);
+    setUploadProgress(0);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (progressInterval.current) clearInterval(progressInterval.current);
+    };
+  }, []);
   const { toast } = useToast();
   const router = useRouter();
   const form = useForm<z.infer<typeof formSchema>>({
@@ -95,13 +130,20 @@ export default function DocumentsForm(data: Partial<Document>) {
 
   async function uploadFile(): Promise<string | null> {
     if (!selectedFile) return sampleDocsUrl;
-    const formData = new FormData();
-    formData.append('sampleDocs', selectedFile);
-    const result = await uploadToFtp(formData);
-    if (!result?.secure_url) {
-      throw new Error('Upload succeeded but no URL was returned.');
+    startProgress();
+    try {
+      const formData = new FormData();
+      formData.append('sampleDocs', selectedFile);
+      const result = await uploadToFtp(formData);
+      if (!result?.secure_url) {
+        throw new Error('Upload succeeded but no URL was returned.');
+      }
+      finishProgress();
+      return result.secure_url;
+    } catch (err) {
+      resetProgress();
+      throw err;
     }
-    return result.secure_url;
   }
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
@@ -278,7 +320,21 @@ export default function DocumentsForm(data: Partial<Document>) {
                 Upload a sample image of the document (JPG, PNG, WebP, or PDF). Max 5MB.
               </p>
 
-              {(previewUrl || (sampleDocsUrl && !selectedFile)) ? (
+              {isUploading ? (
+                <div className="flex h-48 w-full flex-col items-center justify-center rounded-lg border-2 border-dashed border-primary/40 bg-primary/5">
+                  <FileUp className="mb-3 h-8 w-8 animate-bounce text-primary" />
+                  <p className="mb-1 text-sm font-medium text-primary">
+                    Uploading document...
+                  </p>
+                  <p className="mb-3 text-xs text-muted-foreground">{uploadProgress}%</p>
+                  <div className="mx-auto h-2 w-3/4 overflow-hidden rounded-full bg-muted">
+                    <div
+                      className="h-full rounded-full bg-primary transition-all duration-300 ease-out"
+                      style={{ width: `${uploadProgress}%` }}
+                    />
+                  </div>
+                </div>
+              ) : (previewUrl || (sampleDocsUrl && !selectedFile)) ? (
                 <div className="relative inline-block">
                   {(previewUrl || sampleDocsUrl)?.match(/\.pdf$/i) ? (
                     <iframe
@@ -325,7 +381,10 @@ export default function DocumentsForm(data: Partial<Document>) {
             </div>
 
             <Button type="submit" disabled={isLoading}>
-              {isLoading ? 'Saving...' : !data.id ? 'Submit' : 'Update'}
+              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isLoading
+                ? isUploading ? 'Uploading file...' : 'Saving...'
+                : !data.id ? 'Submit' : 'Update'}
             </Button>
           </form>
         </Form>
