@@ -6,17 +6,6 @@ import { CellAction } from './cell-action';
 import moment from 'moment';
 import { Badge } from '@/components/ui/badge';
 import {
-  AlertDialog,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger
-} from '@/components/ui/alert-dialog';
-import { Button } from '@/components/ui/button';
-import {
   Select,
   SelectContent,
   SelectItem,
@@ -142,37 +131,19 @@ export const columns: ColumnDef<TDocumentRequest>[] = [
     cell: ({ row }) => <Badge variant="secondary">{row?.original?.deliverOptions ?? ''}</Badge>
   },
   {
-    accessorKey: 'DocumentSelected',
-    header: 'DOCUMENT SELECTED',
-    cell: ({ row }) => (
-      <AlertDialog>
-        <AlertDialogTrigger asChild>
-          <Button variant="link">View Documents</Button>
-        </AlertDialogTrigger>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>List of document requested</AlertDialogTitle>
-            <AlertDialogDescription>
-              <ul className=" list-disc">
-                {row?.original?.DocumentSelected?.map((doc) => (
-                  <li key={doc.id}>
-                    <p>{doc?.document?.name ?? ''}</p>
-                  </li>
-                ))}
-              </ul>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    )
+    accessorKey: 'documentPayment.referenceNumber',
+    header: 'REFERENCE NUMBER',
+    cell: ({ row }) => row?.original?.documentPayment?.referenceNumber ?? 'N/A'
   },
   {
     accessorKey: 'status',
     header: 'STATUS',
     cell: ({ row }) => <StatusCell data={row.original} />
+  },
+  {
+    accessorKey: 'createdAt',
+    header: 'REQUEST DATE',
+    cell: ({ row }) => moment(row?.original?.createdAt).format('MMMM Do YYYY, h:mm:ss a')
   },
   {
     accessorKey: 'selectedSchedule',
@@ -183,11 +154,6 @@ export const columns: ColumnDef<TDocumentRequest>[] = [
       }
       return 'N/A';
     }
-  },
-  {
-    accessorKey: 'createdAt',
-    header: 'REQUEST DATE',
-    cell: ({ row }) => moment(row?.original?.createdAt).format('MMMM Do YYYY, h:mm:ss a')
   },
   {
     id: 'actions',

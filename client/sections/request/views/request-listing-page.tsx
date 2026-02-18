@@ -33,7 +33,7 @@ export default async function RequestsListingPage() {
         <div className="flex items-start justify-between">
           <Heading
             title={`Order List (${totalDocumentsRequest})`}
-            description="Manage student academic document order list"
+            description="Manage Student Academic Document Order List"
           />
         </div>
         <Separator />
