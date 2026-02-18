@@ -6,9 +6,6 @@ import { sendCustomEmail } from './utils/mail.utils';
 import { DeliveryOptions, DocumentPayment, PaymentOptions } from '@prisma/client';
 import { formatCurrency } from '@/lib/utils';
 import moment from 'moment';
-import { Client as FtpClient } from 'basic-ftp';
-import { Readable } from 'stream';
-import { randomUUID } from 'crypto';
 import path from 'path';
 
 // Xendit integration - bypassed when API key is not configured
@@ -519,45 +516,29 @@ export async function uploadToFtp(data: FormData): Promise<{ secure_url: string 
   const file: File | null = data.get('sampleDocs') as unknown as File;
   if (!file) throw new Error('No file uploaded');
 
-  const ftpHost = (process.env.FTP_HOST || '').trim();
-  const ftpUser = (process.env.FTP_USER || '').trim();
-  const ftpPass = (process.env.FTP_PASS || '').trim();
-  const ftpDir = (process.env.FTP_DIR || '').trim();
-  const ftpPublicUrl = (process.env.FTP_PUBLIC_URL || '').trim();
+  const uploadUrl = (process.env.FTP_PUBLIC_URL || '').trim() + '/upload-endpoint.php';
+  const uploadKey = 'DIRECT_UPLOAD_2026_ICCT';
 
-  if (!ftpHost || !ftpUser || !ftpPass || !ftpDir) {
-    throw new Error('FTP configuration is missing. Please check environment variables.');
-  }
-
-  const ext = path.extname(file.name) || '.bin';
-  const uniqueName = `${randomUUID()}${ext}`;
-  const remoteDir = `${ftpDir}/sample-docs`;
-  const remotePath = `${remoteDir}/${uniqueName}`;
-
+  const formData = new FormData();
   const bytes = await file.arrayBuffer();
-  const buffer = Buffer.from(bytes);
-  const stream = Readable.from(buffer);
+  const blob = new Blob([bytes], { type: file.type });
+  formData.append('file', blob, file.name);
 
-  const client = new FtpClient();
-  client.ftp.verbose = false;
+  const response = await fetch(uploadUrl, {
+    method: 'POST',
+    headers: { 'X-Upload-Key': uploadKey },
+    body: formData
+  });
 
-  try {
-    await client.access({
-      host: ftpHost,
-      user: ftpUser,
-      password: ftpPass,
-      secure: false
-    });
-
-    await client.ensureDir(remoteDir);
-    await client.uploadFrom(stream, remotePath);
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : 'Unknown FTP error';
-    throw new Error(`File upload failed: ${msg}`);
-  } finally {
-    client.close();
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ error: 'Upload failed' }));
+    throw new Error(errorData.error || `Upload failed with status ${response.status}`);
   }
 
-  const publicUrl = `${ftpPublicUrl}/sample-docs/${uniqueName}`;
-  return { secure_url: publicUrl };
+  const result = await response.json();
+  if (!result.secure_url) {
+    throw new Error('Upload succeeded but no URL was returned.');
+  }
+
+  return { secure_url: result.secure_url };
 }
