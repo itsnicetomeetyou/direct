@@ -399,7 +399,12 @@ export async function fetchOrderDocument(data: IOrderDocument): Promise<Document
     </div>
 `;
 
-    await sendCustomEmail(findUser.users.email, 'DiReCT - Order Information', emailContent);
+    try {
+      await sendCustomEmail(findUser.users.email, 'DiReCT - Order Information', emailContent);
+    } catch (emailErr) {
+      console.error('[Kiosk] Failed to send confirmation email:', emailErr);
+    }
+
     return createDocumentPayment;
   } catch (err) {
     if (err instanceof Error) {
