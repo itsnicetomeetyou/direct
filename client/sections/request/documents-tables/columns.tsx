@@ -16,6 +16,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import { Loader2 } from 'lucide-react';
+import { CellAction } from './cell-action';
 
 const STATUS_CONFIG: Record<string, { bg: string; label: string }> = {
   PENDING: { bg: 'bg-[#FFBF61]', label: 'PENDING' },
@@ -151,5 +152,9 @@ export const columns: ColumnDef<TDocumentRequest>[] = [
       }
       return 'N/A';
     }
+  },
+  {
+    id: 'actions',
+    cell: ({ row }) => <CellAction data={row.original} />
   }
 ];
