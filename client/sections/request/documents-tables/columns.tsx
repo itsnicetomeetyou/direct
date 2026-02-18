@@ -15,7 +15,16 @@ import { changeStatus } from '@/server/request';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useToast } from '@/components/ui/use-toast';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Eye, MoreHorizontal } from 'lucide-react';
+import { formatCurrency } from '@/lib/utils';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 
 const STATUS_CONFIG: Record<string, { bg: string; label: string }> = {
   PENDING: { bg: 'bg-[#FFBF61]', label: 'PENDING' },
@@ -92,6 +101,52 @@ function StatusCell({ data }: { data: TDocumentRequest }) {
   );
 }
 
+function ViewDocumentsCell({ data }: { data: TDocumentRequest }) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
+      <DropdownMenu modal={false}>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="h-8 w-8 p-0">
+            <span className="sr-only">Open menu</span>
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onClick={() => setOpen(true)}>
+            <Eye className="mr-2 h-4 w-4" /> View More
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Document Order Information</DialogTitle>
+            <DialogDescription>List of ordered documents</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2 py-2">
+            {data.DocumentSelected.map((doc, index) => (
+              <div
+                key={index}
+                className="flex items-center justify-between rounded-lg border bg-gray-50 px-4 py-3"
+              >
+                <span className="text-sm font-medium">{doc?.document?.name ?? ''}</span>
+                {Number(doc?.document?.price ?? 0) > 0 && (
+                  <span className="text-sm font-semibold text-gray-600">
+                    {formatCurrency(Number(doc?.document?.price ?? 0))}
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
 export const columns: ColumnDef<TDocumentRequest>[] = [
   {
     id: 'select',
@@ -151,5 +206,9 @@ export const columns: ColumnDef<TDocumentRequest>[] = [
       }
       return 'N/A';
     }
+  },
+  {
+    id: 'actions',
+    cell: ({ row }) => <ViewDocumentsCell data={row.original} />
   }
 ];
