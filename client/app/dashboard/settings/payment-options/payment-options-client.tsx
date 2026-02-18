@@ -114,16 +114,17 @@ export default function PaymentOptionsClient({
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
-    setDeleting(deleteTarget.id);
+    const targetId = deleteTarget.id;
+    setDeleting(targetId);
     try {
-      await deletePaymentOption(deleteTarget.id);
+      await deletePaymentOption(targetId);
+      setDeleteTarget(null);
       router.refresh();
       toast({ title: 'Payment method deleted' });
     } catch {
       toast({ variant: 'destructive', title: 'Failed to delete payment method' });
     } finally {
       setDeleting(null);
-      setDeleteTarget(null);
     }
   };
 
@@ -217,7 +218,10 @@ export default function PaymentOptionsClient({
           <AlertDialogFooter>
             <AlertDialogCancel disabled={!!deleting}>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={handleDelete}
+              onClick={(e) => {
+                e.preventDefault();
+                handleDelete();
+              }}
               disabled={!!deleting}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
@@ -242,7 +246,8 @@ export default function PaymentOptionsClient({
           <AlertDialogFooter>
             <AlertDialogCancel disabled={loading === updateTarget?.id}>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={async () => {
+              onClick={async (e) => {
+                e.preventDefault();
                 if (updateTarget) {
                   await handleToggle(updateTarget.id, updateTarget.isActive);
                   setUpdateTarget(null);
