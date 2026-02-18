@@ -123,7 +123,8 @@ export default function Component() {
             </button>
           </div>
 
-          {selectUserOrder.length > 0 && (
+          {selectUserOrder.length > 0 &&
+            selectUserOrder.some((o) => menuItems.find((m) => m.id === o.id)?.sampleDocs) && (
             <div className="mt-6">
               <h3 className={`mb-3 text-lg font-semibold ${poppins.className}`}>Sample Documents</h3>
               <div className="space-y-3">
