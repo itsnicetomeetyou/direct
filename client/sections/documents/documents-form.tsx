@@ -124,16 +124,13 @@ export default function DocumentsForm(data: Partial<Document>) {
           description: 'Document has been added to the database'
         });
       }
-    } catch (err) {
-      if (err instanceof Error) {
-        setIsLoading(false);
-        console.log(err);
-        return toast({
-          title: 'Something went wrong',
-          description: err.message,
-          variant: 'destructive'
-        });
-      }
+    } catch (err: any) {
+      setIsLoading(false);
+      return toast({
+        title: 'Something went wrong',
+        description: err?.message || 'Failed to create document. Please try again.',
+        variant: 'destructive'
+      });
     }
   }
 
@@ -159,15 +156,13 @@ export default function DocumentsForm(data: Partial<Document>) {
           });
         }
       }
-    } catch (err) {
-      if (err instanceof Error) {
-        setIsLoading(false);
-        return toast({
-          title: 'Something went wrong',
-          description: err.message,
-          variant: 'destructive'
-        });
-      }
+    } catch (err: any) {
+      setIsLoading(false);
+      return toast({
+        title: 'Something went wrong',
+        description: err?.message || 'Failed to update document. Please try again.',
+        variant: 'destructive'
+      });
     }
   }
 

@@ -519,9 +519,19 @@ export async function uploadToFtp(data: FormData): Promise<{ secure_url: string 
   const file: File | null = data.get('sampleDocs') as unknown as File;
   if (!file) throw new Error('No file uploaded');
 
+  const ftpHost = (process.env.FTP_HOST || '').trim();
+  const ftpUser = (process.env.FTP_USER || '').trim();
+  const ftpPass = (process.env.FTP_PASS || '').trim();
+  const ftpDir = (process.env.FTP_DIR || '').trim();
+  const ftpPublicUrl = (process.env.FTP_PUBLIC_URL || '').trim();
+
+  if (!ftpHost || !ftpUser || !ftpPass || !ftpDir) {
+    throw new Error('FTP configuration is missing. Please check environment variables.');
+  }
+
   const ext = path.extname(file.name) || '.bin';
   const uniqueName = `${randomUUID()}${ext}`;
-  const remoteDir = `${process.env.FTP_DIR}/sample-docs`;
+  const remoteDir = `${ftpDir}/sample-docs`;
   const remotePath = `${remoteDir}/${uniqueName}`;
 
   const bytes = await file.arrayBuffer();
@@ -533,18 +543,21 @@ export async function uploadToFtp(data: FormData): Promise<{ secure_url: string 
 
   try {
     await client.access({
-      host: process.env.FTP_HOST,
-      user: process.env.FTP_USER,
-      password: process.env.FTP_PASS,
+      host: ftpHost,
+      user: ftpUser,
+      password: ftpPass,
       secure: false
     });
 
     await client.ensureDir(remoteDir);
     await client.uploadFrom(stream, remotePath);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'Unknown FTP error';
+    throw new Error(`File upload failed: ${msg}`);
   } finally {
     client.close();
   }
 
-  const publicUrl = `${process.env.FTP_PUBLIC_URL}/sample-docs/${uniqueName}`;
+  const publicUrl = `${ftpPublicUrl}/sample-docs/${uniqueName}`;
   return { secure_url: publicUrl };
 }
