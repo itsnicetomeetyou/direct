@@ -82,6 +82,10 @@ const TAB_DISPLAY: Record<string, { label: string; description: string }> = {
     label: 'Order Status',
     description: 'Configure available order statuses'
   },
+  'email-templates': {
+    label: 'Email Templates',
+    description: 'Configure email notifications sent per status'
+  },
   'roles-management': {
     label: 'Roles Management',
     description: 'Configure role permissions (this page)'

@@ -18,6 +18,7 @@ import {
   LucideIcon,
   LucideProps,
   LucideShoppingBag,
+  Mail,
   Moon,
   MoreVertical,
   Pizza,
@@ -82,5 +83,6 @@ export const Icons = {
     </svg>
   ),
   twitter: Twitter,
-  check: Check
+  check: Check,
+  mail: Mail
 };

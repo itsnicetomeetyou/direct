@@ -226,6 +226,7 @@ const ALL_TAB_KEYS = [
   'schedule-options',
   'user-management',
   'order-status',
+  'email-templates',
   'roles-management'
 ];
 
@@ -347,4 +348,45 @@ export async function getPermissionsForRole(role: string) {
   }
 
   return allowedTabs;
+}
+
+// ==================== EMAIL TEMPLATES ====================
+
+export async function fetchEmailTemplates() {
+  return prisma.emailTemplate.findMany({
+    orderBy: { status: 'asc' }
+  });
+}
+
+export async function upsertEmailTemplate(data: {
+  status: string;
+  subject: string;
+  body: string;
+  isActive: boolean;
+}) {
+  const { RequestDocumentsStatus } = await import('@prisma/client');
+  const statusEnum = data.status as keyof typeof RequestDocumentsStatus;
+
+  const template = await prisma.emailTemplate.upsert({
+    where: { status: RequestDocumentsStatus[statusEnum] },
+    update: {
+      subject: data.subject,
+      body: data.body,
+      isActive: data.isActive
+    },
+    create: {
+      status: RequestDocumentsStatus[statusEnum],
+      subject: data.subject,
+      body: data.body,
+      isActive: data.isActive
+    }
+  });
+  revalidatePath('/dashboard/settings/email-templates');
+  return template;
+}
+
+export async function getEmailTemplateByStatus(status: string) {
+  return prisma.emailTemplate.findUnique({
+    where: { status: status as any }
+  });
 }

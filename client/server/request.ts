@@ -6,6 +6,7 @@ import { createOrder, createQuotation } from './utils/lalamove';
 import { IQuotation } from '@lalamove/lalamove-js';
 import { IOrder } from '@lalamove/lalamove-js/dist/response/order';
 import parsePhoneNumber from 'libphonenumber-js';
+import { sendCustomEmail } from './utils/mail.utils';
 
 export async function changeStatus(data: {
   requestDocumentId: string;
@@ -18,7 +19,6 @@ export async function changeStatus(data: {
     address: string;
   };
 }) {
-  // Find the request document
   const findRequestDocuments = await prisma.requestDocuments.findFirst({
     where: {
       id: data.requestDocumentId
@@ -28,7 +28,13 @@ export async function changeStatus(data: {
         include: {
           UserInformation: true
         }
-      }
+      },
+      DocumentSelected: {
+        include: {
+          document: true
+        }
+      },
+      documentPayment: true
     }
   });
   if (!findRequestDocuments) throw new Error('Request Document not found');
@@ -54,7 +60,6 @@ export async function changeStatus(data: {
     });
   }
   if (data.status === 'PAID' || data.status === 'CANCELLED' || data.status === 'PENDING') {
-    // Update the status of the document payment
     await prisma.documentPayment.update({
       where: {
         id: findRequestDocuments.documentPaymentId
@@ -64,7 +69,6 @@ export async function changeStatus(data: {
       }
     });
   }
-  // Update the status of the request document
   const updateRequestDocumentStatus = await prisma.requestDocuments.update({
     where: {
       id: data.requestDocumentId
@@ -74,6 +78,51 @@ export async function changeStatus(data: {
     }
   });
   if (!updateRequestDocumentStatus) throw new Error('Failed to update status');
+
+  // Send status change email if a template is configured and active
+  try {
+    const emailTemplate = await prisma.emailTemplate.findUnique({
+      where: { status: data.status }
+    });
+
+    if (emailTemplate && emailTemplate.isActive) {
+      const userEmail = findRequestDocuments.users?.email;
+      const firstName = findRequestDocuments.users?.UserInformation?.firstName ?? '';
+      const lastName = findRequestDocuments.users?.UserInformation?.lastName ?? '';
+      const refNumber = findRequestDocuments.documentPayment?.referenceNumber ?? '';
+      const docNames = findRequestDocuments.DocumentSelected
+        ?.map((ds) => ds.document?.name)
+        .filter(Boolean)
+        .join(', ') ?? '';
+
+      const STATUS_LABELS: Record<string, string> = {
+        PENDING: 'Pending',
+        PAID: 'Paid',
+        PROCESSING: 'Processing',
+        READYTOPICKUP: 'Ready to Pick Up',
+        OUTFORDELIVERY: 'Out for Delivery',
+        COMPLETED: 'Completed',
+        CANCELLED: 'Cancelled'
+      };
+
+      const replacePlaceholders = (text: string) =>
+        text
+          .replace(/\{\{firstName\}\}/g, firstName)
+          .replace(/\{\{lastName\}\}/g, lastName)
+          .replace(/\{\{referenceNumber\}\}/g, refNumber)
+          .replace(/\{\{status\}\}/g, STATUS_LABELS[data.status] ?? data.status)
+          .replace(/\{\{documents\}\}/g, docNames);
+
+      const subject = replacePlaceholders(emailTemplate.subject);
+      const body = replacePlaceholders(emailTemplate.body);
+
+      if (userEmail) {
+        await sendCustomEmail(userEmail, subject, body);
+      }
+    }
+  } catch (emailError) {
+    console.error('Failed to send status change email:', emailError);
+  }
 
   revalidatePath('/dashboard/request');
   return updateRequestDocumentStatus;

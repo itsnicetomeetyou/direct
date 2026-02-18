@@ -223,6 +223,12 @@ export const navItems: NavItem[] = [
         label: 'order-status'
       },
       {
+        title: 'Email Templates',
+        href: '/dashboard/settings/email-templates',
+        icon: 'mail',
+        label: 'email-templates'
+      },
+      {
         title: 'Roles Management',
         href: '/dashboard/settings/roles-management',
         icon: 'settings',
