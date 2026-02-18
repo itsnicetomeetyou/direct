@@ -55,11 +55,13 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="flex">
+    <div className="flex h-screen overflow-hidden">
       <Sidebar navItems={filteredItems} />
-      <main className="w-full flex-1 overflow-hidden">
+      <main className="flex w-full flex-1 flex-col overflow-hidden">
         <Header navItems={filteredItems} />
-        {children}
+        <div className="flex-1 overflow-y-auto">
+          {children}
+        </div>
       </main>
     </div>
   );
