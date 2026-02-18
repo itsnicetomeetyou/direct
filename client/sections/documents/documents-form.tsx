@@ -34,10 +34,7 @@ const formSchema = z.object({
     message: 'Price must be at least 0 pesos.'
   }),
   isAvailable: z.boolean(),
-  eligibility: z.enum(['STUDENT', 'GRADUATED', 'BOTH']),
-  dayBeforeRelease: z.number().min(0, {
-    message: 'Must be 0 or more days.'
-  })
+  eligibility: z.enum(['STUDENT', 'GRADUATED', 'BOTH'])
 });
 
 export default function DocumentsForm(data: Partial<Document>) {
@@ -54,8 +51,7 @@ export default function DocumentsForm(data: Partial<Document>) {
       name: data.name || '',
       price: data.price || 0,
       isAvailable: data.isAvailable || false,
-      eligibility: data.eligibility || 'BOTH',
-      dayBeforeRelease: data.dayBeforeRelease ?? 3
+      eligibility: data.eligibility || 'BOTH'
     }
   });
 
@@ -117,8 +113,7 @@ export default function DocumentsForm(data: Partial<Document>) {
         price: values.price.toString(),
         isAvailable: values.isAvailable.toString(),
         eligibility: values.eligibility,
-        sampleDocs: uploadedUrl,
-        dayBeforeRelease: values.dayBeforeRelease
+        sampleDocs: uploadedUrl
       });
       if (response.id) {
         setIsLoading(false);
@@ -152,8 +147,7 @@ export default function DocumentsForm(data: Partial<Document>) {
           price: values.price.toString(),
           isAvailable: values.isAvailable.toString(),
           eligibility: values.eligibility,
-          sampleDocs: uploadedUrl,
-          dayBeforeRelease: values.dayBeforeRelease
+          sampleDocs: uploadedUrl
         });
         if (response.id) {
           setIsLoading(false);
@@ -281,29 +275,6 @@ export default function DocumentsForm(data: Partial<Document>) {
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="dayBeforeRelease"
-                disabled={isLoading}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Minimum Days Advance</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        min={0}
-                        max={365}
-                        {...field}
-                        onChange={(e) => field.onChange(e.target.valueAsNumber)}
-                      />
-                    </FormControl>
-                    <p className="text-xs text-muted-foreground">
-                      Minimum business days before this document can be scheduled for pickup/delivery
-                    </p>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
             </div>
 
             <div>
