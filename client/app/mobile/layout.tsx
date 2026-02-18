@@ -17,7 +17,7 @@ export default function MobileLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen overflow-y-auto bg-background">
       {children}
     </div>
   );

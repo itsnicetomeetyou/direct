@@ -114,7 +114,7 @@ export default async function MobileTransactionPage({
   const isPending = tx.status === 'PENDING';
 
   return (
-    <div className="min-h-screen bg-background px-4 pb-8 pt-6">
+    <div className="min-h-screen overflow-y-auto bg-background px-4 pb-8 pt-6">
       {/* Header */}
       <div className="mb-6 flex items-center gap-3">
         <Link
