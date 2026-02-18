@@ -164,8 +164,9 @@ export default function StartTransaction(props: {
                 <Input
                   minLength={3}
                   maxLength={15}
-                  name="studentNumber"
+                  name="studentNo"
                   type="text"
+                  autoComplete="off"
                   value={studentNumber}
                   onChange={(e) => setStudentNumber(e.target.value)}
                   onKeyDown={(e) => { if (e.key === 'Enter') onSubmitStudentNumber(); }}

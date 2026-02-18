@@ -111,8 +111,9 @@ export default function CheckStatus(props: {
             <Input
               minLength={3}
               maxLength={30}
-              name="studentNumber"
+              name="referenceNumber"
               type="text"
+              autoComplete="off"
               className={`h-14 w-full rounded-xl bg-blue-100 text-center text-black focus:outline-1 data-[focus]:bg-blue-100 ${poppins.className} caret text-2xl font-semibold uppercase caret-blue-500 focus:outline-none`}
               onChange={(e) => setReferenceNumber(e.target.value)}
             />
