@@ -10,7 +10,6 @@ import OrderConfirmation from '@/components/kiosk/dialog/order-confirmation';
 import { setOpenModalConfirmationOrder } from '@/store/kiosk/orderSlice';
 import { useEffect, useState } from 'react';
 import { fetchAllDocuments } from '@/server/kiosk';
-import { FileText } from 'lucide-react';
 import '@cyntler/react-doc-viewer/dist/index.css';
 
 type DocumentItem = {
@@ -131,25 +130,25 @@ export default function Component() {
                 {selectUserOrder.map((orderItem) => {
                   const fullDoc = menuItems.find((m) => m.id === orderItem.id);
                   if (!fullDoc?.sampleDocs) return null;
+                  const isPdf = /\.pdf$/i.test(fullDoc.sampleDocs);
+                  const imgSrc = isPdf
+                    ? fullDoc.sampleDocs
+                        .replace('/raw/upload/', '/image/upload/')
+                        .replace('/upload/', '/upload/pg_1,w_600,h_400,c_limit/')
+                        .replace(/\.pdf$/i, '.jpg')
+                    : fullDoc.sampleDocs;
                   return (
                     <div key={orderItem.id} className="overflow-hidden rounded-xl bg-white/10">
                       <div className="px-3 py-2">
                         <p className={`text-sm font-medium ${poppins.className}`}>{orderItem.name}</p>
                       </div>
-                      {fullDoc.sampleDocs.match(/\.pdf$/i) ? (
-                        <div className="flex h-40 items-center justify-center bg-white/5">
-                          <FileText className="h-10 w-10 text-white/50" />
-                          <span className="ml-2 text-sm text-white/50">PDF Document</span>
-                        </div>
-                      ) : (
-                        <Image
-                          src={fullDoc.sampleDocs}
-                          alt={`Sample - ${orderItem.name}`}
-                          width={400}
-                          height={300}
-                          className="w-full object-contain"
-                        />
-                      )}
+                      <Image
+                        src={imgSrc}
+                        alt={`Sample - ${orderItem.name}`}
+                        width={400}
+                        height={300}
+                        className="w-full object-contain"
+                      />
                     </div>
                   );
                 })}
