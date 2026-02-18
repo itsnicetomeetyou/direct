@@ -7,7 +7,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { createDocument, updateDocument } from '@/server/document';
-import { uploadToFtp } from '@/server/kiosk';
+import { uploadToCloudinary } from '@/server/kiosk';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import { useRouter } from 'next/navigation';
@@ -134,7 +134,7 @@ export default function DocumentsForm(data: Partial<Document>) {
     try {
       const formData = new FormData();
       formData.append('sampleDocs', selectedFile);
-      const result = await uploadToFtp(formData);
+      const result = await uploadToCloudinary(formData);
       if (!result?.secure_url) {
         throw new Error('Upload succeeded but no URL was returned.');
       }
