@@ -42,9 +42,8 @@ export default function OrderConfirmation(props: { open: boolean; onClose: () =>
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  // Determine which tab index to skip based on shipping option
-  // PICKUP → skip Address (index 2), LALAMOVE → skip Schedule (index 3)
-  const skipIndex = selectedDocuments.shippingOptions === 'PICKUP' ? 2 : 3;
+  // PICKUP → skip Address (index 2), Delivery → show all tabs (no skip)
+  const skipIndex = selectedDocuments.shippingOptions === 'PICKUP' ? 2 : -1;
 
   const handleNextClick = () => {
     setSelectedIndex((prevIndex) => {
