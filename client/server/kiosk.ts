@@ -6,7 +6,10 @@ import { sendCustomEmail } from './utils/mail.utils';
 import { DeliveryOptions, DocumentPayment, PaymentOptions } from '@prisma/client';
 import { formatCurrency } from '@/lib/utils';
 import moment from 'moment';
-import cloudinary from 'cloudinary';
+import { Client as FtpClient } from 'basic-ftp';
+import { Readable } from 'stream';
+import { randomUUID } from 'crypto';
+import path from 'path';
 
 // Xendit integration - bypassed when API key is not configured
 const XENDIT_ENABLED =
@@ -512,35 +515,36 @@ export async function checkScheduleForDate(date: string): Promise<{
   return transformedResult;
 }
 
-export async function uploadToCloudinary(data: FormData): Promise<{ secure_url: string; public_id: string; format: string }> {
-  cloudinary.v2.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET
-  });
+export async function uploadToFtp(data: FormData): Promise<{ secure_url: string }> {
   const file: File | null = data.get('sampleDocs') as unknown as File;
-
   if (!file) throw new Error('No file uploaded');
+
+  const ext = path.extname(file.name) || '.bin';
+  const uniqueName = `${randomUUID()}${ext}`;
+  const remoteDir = `${process.env.FTP_DIR}/sample-docs`;
+  const remotePath = `${remoteDir}/${uniqueName}`;
 
   const bytes = await file.arrayBuffer();
   const buffer = Buffer.from(bytes);
+  const stream = Readable.from(buffer);
 
-  const result = await new Promise<cloudinary.UploadApiResponse>((resolve, reject) => {
-    const uploadStream = cloudinary.v2.uploader.upload_stream(
-      { resource_type: 'auto', folder: '/direct' },
-      (error, res) => {
-        if (error) return reject(new Error(error.message || 'Cloudinary upload failed'));
-        if (res) return resolve(res);
-        reject(new Error('Upload failed, result is undefined'));
-      }
-    );
+  const client = new FtpClient();
+  client.ftp.verbose = false;
 
-    uploadStream.end(buffer);
-  });
+  try {
+    await client.access({
+      host: process.env.FTP_HOST,
+      user: process.env.FTP_USER,
+      password: process.env.FTP_PASS,
+      secure: false
+    });
 
-  return {
-    secure_url: result.secure_url,
-    public_id: result.public_id,
-    format: result.format
-  };
+    await client.ensureDir(remoteDir);
+    await client.uploadFrom(stream, remotePath);
+  } finally {
+    client.close();
+  }
+
+  const publicUrl = `${process.env.FTP_PUBLIC_URL}/sample-docs/${uniqueName}`;
+  return { secure_url: publicUrl };
 }

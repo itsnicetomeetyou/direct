@@ -13,19 +13,21 @@ const poppins = Poppins({
   subsets: ['latin']
 });
 
-function getPdfPreviewUrl(url: string): string {
-  return url
-    .replace('/raw/upload/', '/image/upload/')
-    .replace('/upload/', '/upload/pg_1,w_400,h_300,c_limit/')
-    .replace(/\.pdf$/i, '.jpg');
-}
-
 function SampleDocThumbnail({ src, alt }: { src: string; alt: string }) {
   const isPdf = /\.pdf$/i.test(src);
-  const imgSrc = isPdf ? getPdfPreviewUrl(src) : src;
+  if (isPdf) {
+    return (
+      <iframe
+        src={src}
+        title={alt}
+        className="h-24 w-24 rounded-lg border-0"
+        style={{ pointerEvents: 'none' }}
+      />
+    );
+  }
   return (
     <Image
-      src={imgSrc}
+      src={src}
       alt={alt}
       width={96}
       height={96}

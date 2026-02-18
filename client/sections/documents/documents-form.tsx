@@ -7,7 +7,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { createDocument, updateDocument } from '@/server/document';
-import { uploadToCloudinary } from '@/server/kiosk';
+import { uploadToFtp } from '@/server/kiosk';
 import { useRef, useState } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import { useRouter } from 'next/navigation';
@@ -23,7 +23,7 @@ import {
   SelectValue
 } from '@/components/ui/select';
 import { EligibilityStatus } from '@prisma/client';
-import { Upload, X, FileText } from 'lucide-react';
+import { Upload, X } from 'lucide-react';
 import Image from 'next/image';
 
 const formSchema = z.object({
@@ -101,7 +101,7 @@ export default function DocumentsForm(data: Partial<Document>) {
     if (!selectedFile) return sampleDocsUrl;
     const formData = new FormData();
     formData.append('sampleDocs', selectedFile);
-    const result = await uploadToCloudinary(formData);
+    const result = await uploadToFtp(formData);
     if (!result?.secure_url) {
       throw new Error('Upload succeeded but no URL was returned.');
     }
@@ -315,10 +315,11 @@ export default function DocumentsForm(data: Partial<Document>) {
               {(previewUrl || (sampleDocsUrl && !selectedFile)) ? (
                 <div className="relative inline-block">
                   {(previewUrl || sampleDocsUrl)?.match(/\.pdf$/i) ? (
-                    <div className="flex h-48 w-48 flex-col items-center justify-center rounded-lg border bg-muted/30">
-                      <FileText className="mb-2 h-12 w-12 text-muted-foreground" />
-                      <span className="text-xs text-muted-foreground">PDF Document</span>
-                    </div>
+                    <iframe
+                      src={previewUrl || sampleDocsUrl || ''}
+                      title="Sample document preview"
+                      className="h-48 w-48 rounded-lg border"
+                    />
                   ) : (
                     <Image
                       src={previewUrl || sampleDocsUrl || ''}

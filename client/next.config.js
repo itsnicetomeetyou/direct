@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: ['utfs.io', 'api.slingacademy.com', 'res.cloudinary.com']
+    domains: ['utfs.io', 'api.slingacademy.com', 'res.cloudinary.com', 'directplus-icct.site']
   },
   experimental: {
     serverActions: {

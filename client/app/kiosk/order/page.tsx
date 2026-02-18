@@ -131,24 +131,26 @@ export default function Component() {
                   const fullDoc = menuItems.find((m) => m.id === orderItem.id);
                   if (!fullDoc?.sampleDocs) return null;
                   const isPdf = /\.pdf$/i.test(fullDoc.sampleDocs);
-                  const imgSrc = isPdf
-                    ? fullDoc.sampleDocs
-                        .replace('/raw/upload/', '/image/upload/')
-                        .replace('/upload/', '/upload/pg_1,w_600,h_400,c_limit/')
-                        .replace(/\.pdf$/i, '.jpg')
-                    : fullDoc.sampleDocs;
                   return (
                     <div key={orderItem.id} className="overflow-hidden rounded-xl bg-white/10">
                       <div className="px-3 py-2">
                         <p className={`text-sm font-medium ${poppins.className}`}>{orderItem.name}</p>
                       </div>
-                      <Image
-                        src={imgSrc}
-                        alt={`Sample - ${orderItem.name}`}
-                        width={400}
-                        height={300}
-                        className="w-full object-contain"
-                      />
+                      {isPdf ? (
+                        <iframe
+                          src={fullDoc.sampleDocs}
+                          title={`Sample - ${orderItem.name}`}
+                          className="h-60 w-full border-0 bg-white"
+                        />
+                      ) : (
+                        <Image
+                          src={fullDoc.sampleDocs}
+                          alt={`Sample - ${orderItem.name}`}
+                          width={400}
+                          height={300}
+                          className="w-full object-contain"
+                        />
+                      )}
                     </div>
                   );
                 })}
