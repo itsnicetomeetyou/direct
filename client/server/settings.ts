@@ -133,6 +133,28 @@ export async function updateScheduleConfig(data: {
   return config;
 }
 
+// ==================== PER-DOCUMENT MIN DAYS ====================
+
+export async function fetchDocumentMinDays() {
+  const docs = await prisma.documents.findMany({
+    select: { id: true, name: true, dayBeforeRelease: true },
+    orderBy: { name: 'asc' }
+  });
+  return docs;
+}
+
+export async function updateDocumentMinDays(
+  updates: Array<{ id: string; dayBeforeRelease: number }>
+) {
+  for (const u of updates) {
+    await prisma.documents.update({
+      where: { id: u.id },
+      data: { dayBeforeRelease: u.dayBeforeRelease }
+    });
+  }
+  revalidatePath('/dashboard/settings/schedule-options');
+}
+
 // ==================== HOLIDAYS ====================
 
 export async function fetchHolidays() {

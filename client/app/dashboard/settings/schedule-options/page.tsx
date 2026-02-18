@@ -1,6 +1,6 @@
 import { Breadcrumbs } from '@/components/breadcrumbs';
 import PageContainer from '@/components/layout/page-container';
-import { fetchScheduleConfig, fetchHolidays } from '@/server/settings';
+import { fetchScheduleConfig, fetchHolidays, fetchDocumentMinDays } from '@/server/settings';
 import ScheduleOptionsClient from './schedule-options-client';
 
 const breadcrumbItems = [
@@ -16,6 +16,7 @@ export const metadata = {
 export default async function ScheduleOptionsPage() {
   const config = await fetchScheduleConfig();
   const holidays = await fetchHolidays();
+  const documents = await fetchDocumentMinDays();
 
   return (
     <PageContainer scrollable>
@@ -24,14 +25,14 @@ export default async function ScheduleOptionsPage() {
         <ScheduleOptionsClient
           config={{
             id: config.id,
-            maxSlotsPerDay: config.maxSlotsPerDay,
-            minDaysAdvance: config.minDaysAdvance
+            maxSlotsPerDay: config.maxSlotsPerDay
           }}
           holidays={holidays.map((h) => ({
             id: h.id,
             date: h.date.toISOString(),
             name: h.name
           }))}
+          documents={documents}
         />
       </div>
     </PageContainer>

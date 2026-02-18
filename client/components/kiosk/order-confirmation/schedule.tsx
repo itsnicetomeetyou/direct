@@ -34,10 +34,9 @@ export default function Schedule() {
 
   const minDaysAdvance = useMemo(() => {
     const selectedItems = selectOrderData.orderItem;
-    if (selectedItems.length === 0) return config.minDaysAdvance;
-    const maxFromDocs = Math.max(...selectedItems.map((item) => item.dayBeforeRelease ?? 3));
-    return Math.max(maxFromDocs, config.minDaysAdvance);
-  }, [selectOrderData.orderItem, config.minDaysAdvance]);
+    if (selectedItems.length === 0) return 3;
+    return Math.max(...selectedItems.map((item) => item.dayBeforeRelease ?? 3));
+  }, [selectOrderData.orderItem]);
 
   const isDisabledDate = (date: Date) => {
     const today = new Date();
