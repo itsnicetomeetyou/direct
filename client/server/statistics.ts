@@ -32,25 +32,41 @@ async function totalDocumentRequested() {
     const totalRequested = await prisma.requestDocuments.findMany({
       select: {
         createdAt: true,
-        status: true
+        status: true,
+        DocumentSelected: {
+          select: {
+            document: {
+              select: { name: true }
+            }
+          }
+        }
       }
     });
 
-    // Group by date and status, count the requests
-    const dailyRequestByStatusMap: Record<string, { date: string; status: string; totalRequests: number }> = {};
+    const dailyRequestMap: Record<
+      string,
+      { date: string; status: string; documentType: string; totalRequests: number }
+    > = {};
+
     totalRequested.forEach((doc) => {
       const date = doc.createdAt.toISOString().split('T')[0];
       const status = doc.status ?? 'PENDING';
-      const key = `${date}__${status}`;
-      if (!dailyRequestByStatusMap[key]) {
-        dailyRequestByStatusMap[key] = { date, status, totalRequests: 0 };
-      }
-      dailyRequestByStatusMap[key].totalRequests += 1;
+      const docNames = doc.DocumentSelected.map((ds) => ds.document.name);
+      const uniqueNames = docNames.length > 0 ? Array.from(new Set(docNames)) : ['Unknown'];
+
+      uniqueNames.forEach((docType) => {
+        const key = `${date}__${status}__${docType}`;
+        if (!dailyRequestMap[key]) {
+          dailyRequestMap[key] = { date, status, documentType: docType, totalRequests: 0 };
+        }
+        dailyRequestMap[key].totalRequests += 1;
+      });
     });
 
-    const dailyRequestData = Object.values(dailyRequestByStatusMap);
+    const dailyRequestData = Object.values(dailyRequestMap);
 
-    // Calculate percentage change from aggregated daily totals
+    const allDocumentTypes = Array.from(new Set(dailyRequestData.map((d) => d.documentType))).sort();
+
     const dailyTotalsMap: Record<string, number> = {};
     dailyRequestData.forEach(({ date, totalRequests }) => {
       dailyTotalsMap[date] = (dailyTotalsMap[date] || 0) + totalRequests;
@@ -67,7 +83,12 @@ async function totalDocumentRequested() {
         ((lastData.total - previousData.total) / previousData.total) * 100;
     }
 
-    return { dailyRequestData, percentageChangeFromLastData, totalRequested: totalRequested.length };
+    return {
+      dailyRequestData,
+      allDocumentTypes,
+      percentageChangeFromLastData,
+      totalRequested: totalRequested.length
+    };
   } catch (err) {
     if (err instanceof Error) {
       throw new Error(err.message);

@@ -125,7 +125,10 @@ export default async function OverViewPage() {
             </div>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-7">
               <div className="col-span-4">
-                <BarGraph chartData={getStats?.totalDocumentRequested?.dailyRequestData || []} />
+                <BarGraph
+                  chartData={getStats?.totalDocumentRequested?.dailyRequestData || []}
+                  documentTypes={getStats?.totalDocumentRequested?.allDocumentTypes || []}
+                />
               </div>
               <Card className="col-span-4 md:col-span-3">
                 <CardHeader>
