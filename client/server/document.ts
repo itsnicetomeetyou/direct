@@ -61,18 +61,15 @@ export async function createDocument(data: {
       dayBeforeRelease: data.dayBeforeRelease ?? 3
     }
   });
-  return response;
+  return { ...response, price: Number(response.price) };
 }
 
 export async function fetchDocumentById(documentId: string) {
-  const checkDocumentExist = await prisma.documents.findFirst({
-    where: { id: documentId }
-  });
-  if (!checkDocumentExist) throw new Error('Document not found');
   const document = await prisma.documents.findFirst({
     where: { id: documentId }
   });
-  return document;
+  if (!document) throw new Error('Document not found');
+  return { ...document, price: Number(document.price) };
 }
 
 export async function updateDocument(documentId: string, data: {
@@ -98,7 +95,7 @@ export async function updateDocument(documentId: string, data: {
       dayBeforeRelease: data.dayBeforeRelease ?? checkDocumentExist.dayBeforeRelease
     }
   });
-  return response;
+  return { ...response, price: Number(response.price) };
 }
 
 export async function deleteDocument(documentId: string) {
