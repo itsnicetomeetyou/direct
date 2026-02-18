@@ -12,11 +12,7 @@ export default async function Page({ params }: { params: { documentId: string } 
   }
   try {
     const data = await fetchDocumentById(documentId);
-    return (
-      <DocumentViewPage
-        {...{ ...data, price: data?.price ? Number(data.price) : 0 }}
-      />
-    );
+    return <DocumentViewPage {...data} />;
   } catch (error) {
     return <div>Error loading document.</div>;
   }

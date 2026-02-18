@@ -69,7 +69,12 @@ export async function fetchDocumentById(documentId: string) {
     where: { id: documentId }
   });
   if (!document) throw new Error('Document not found');
-  return { ...document, price: Number(document.price) };
+  return {
+    ...document,
+    price: Number(document.price),
+    createdAt: document.createdAt.toISOString(),
+    updatedAt: document.updatedAt.toISOString()
+  };
 }
 
 export async function updateDocument(documentId: string, data: {

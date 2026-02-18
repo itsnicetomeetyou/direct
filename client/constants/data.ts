@@ -128,8 +128,8 @@ export type Document = {
   isAvailable: boolean;
   eligibility: EligibilityStatus;
   dayBeforeRelease: number;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: Date | string;
+  updatedAt: Date | string;
   sampleDocs: string | null;
 };
 
