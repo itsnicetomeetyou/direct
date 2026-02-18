@@ -28,6 +28,102 @@ import { GoogleMap, Marker, useJsApiLoader } from '@react-google-maps/api';
 import { useEffect, useState } from 'react';
 import { createQuotation } from '@/server/utils/lalamove';
 import { IQuotation } from '@lalamove/lalamove-js';
+import { Check, X } from 'lucide-react';
+
+function getTrackingSteps(deliverOptions: string) {
+  if (deliverOptions === 'PICKUP') {
+    return [
+      { key: 'PENDING', label: 'Pending' },
+      { key: 'PAID', label: 'Paid' },
+      { key: 'PROCESSING', label: 'Processing' },
+      { key: 'READYTOPICKUP', label: 'Ready to Pick Up' },
+      { key: 'COMPLETED', label: 'Completed' }
+    ];
+  }
+  return [
+    { key: 'PENDING', label: 'Pending' },
+    { key: 'PAID', label: 'Paid' },
+    { key: 'PROCESSING', label: 'Processing' },
+    { key: 'OUTFORDELIVERY', label: 'Out for Delivery' },
+    { key: 'COMPLETED', label: 'Completed' }
+  ];
+}
+
+function getStepIndex(status: string, steps: { key: string }[]) {
+  const idx = steps.findIndex((s) => s.key === status);
+  return idx === -1 ? 0 : idx;
+}
+
+function TrackingProgress({
+  status,
+  deliverOptions
+}: {
+  status: string;
+  deliverOptions: string;
+}) {
+  const isCancelled = status === 'CANCELLED';
+  const steps = getTrackingSteps(deliverOptions);
+  const currentIndex = isCancelled ? -1 : getStepIndex(status, steps);
+
+  if (isCancelled) {
+    return (
+      <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-center">
+        <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-red-500">
+          <X className="h-5 w-5 text-white" />
+        </div>
+        <p className="text-sm font-semibold text-red-700">Order Cancelled</p>
+        <p className="text-xs text-red-500">This order has been cancelled.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mb-6 px-2 py-4">
+      <div className="flex items-center justify-between">
+        {steps.map((step, index) => {
+          const isCompleted = index <= currentIndex;
+          const isLast = index === steps.length - 1;
+
+          return (
+            <div key={step.key} className="flex flex-1 items-center">
+              <div className="flex flex-col items-center">
+                <div
+                  className={`flex h-9 w-9 items-center justify-center rounded-full border-2 transition-colors ${
+                    isCompleted
+                      ? 'border-emerald-500 bg-emerald-500 text-white'
+                      : 'border-gray-300 bg-white text-gray-400'
+                  }`}
+                >
+                  {isCompleted ? (
+                    <Check className="h-5 w-5" />
+                  ) : (
+                    <span className="text-xs font-bold">{index + 1}</span>
+                  )}
+                </div>
+                <span
+                  className={`mt-2 max-w-[80px] text-center text-[10px] font-medium leading-tight ${
+                    isCompleted ? 'text-emerald-600' : 'text-gray-400'
+                  }`}
+                >
+                  {step.label}
+                </span>
+              </div>
+              {!isLast && (
+                <div className="mx-1 mb-5 h-1 flex-1">
+                  <div
+                    className={`h-full rounded-full transition-colors ${
+                      index < currentIndex ? 'bg-emerald-500' : 'bg-gray-200'
+                    }`}
+                  />
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 export default function ViewMoreModal(data: {
   isOpen: boolean;
@@ -42,7 +138,6 @@ export default function ViewMoreModal(data: {
     version: 'beta'
   });
 
-  // const totalAmount = data.data.DocumentSelected.reduce((sum, doc) => Number(sum) + Number(doc.document.price), 0);
   const { toast } = useToast();
   const totalShippingFees = data.data.documentPayment.shippingFees ?? shippingFees;
   const totalDocumentFess =
@@ -111,71 +206,60 @@ export default function ViewMoreModal(data: {
         </DialogHeader>
 
         <ScrollArea className="h-[70vh]">
-          <div>
-            <Label htmlFor="name" className="text-1xl text-right font-bold">
-              Document Order Information
-            </Label>
-            <div className="grid gap-4 py-4">
-              <ul className="space-y-2">
-                {data.data.DocumentSelected.map((doc, index) => (
-                  <li key={index} className="flex items-center justify-between rounded bg-gray-100 p-2">
-                    <span className="text-sm font-medium">{doc?.document?.name ?? ''}</span>
-                    {Number(doc?.document?.price ?? 0) > 0 && (
-                      <span className="ml-2 text-sm text-gray-500">
-                        {formatCurrency(Number(doc?.document?.price ?? 0))}
-                      </span>
-                    )}
-                  </li>
-                ))}
-              </ul>
+          {/* Tracking Progress */}
+          <TrackingProgress
+            status={data.data.status ?? 'PENDING'}
+            deliverOptions={data.data.deliverOptions ?? 'PICKUP'}
+          />
+
+          {/* Document Order Information */}
+          <div className="mb-4">
+            <Label className="text-base font-bold">Document Order Information</Label>
+            <p className="mb-3 text-xs text-muted-foreground">List of ordered documents</p>
+            <div className="space-y-2">
+              {data.data.DocumentSelected.map((doc, index) => (
+                <div key={index} className="flex items-center justify-between rounded-lg border bg-gray-50 px-4 py-3">
+                  <span className="text-sm font-medium">{doc?.document?.name ?? ''}</span>
+                  {Number(doc?.document?.price ?? 0) > 0 && (
+                    <span className="text-sm font-semibold text-gray-600">
+                      {formatCurrency(Number(doc?.document?.price ?? 0))}
+                    </span>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
 
-          <div>
-            <Label htmlFor="name" className="text-1xl text-right font-bold">
-              Student Information
-            </Label>
+          {/* Student Information */}
+          <div className="mb-4">
+            <Label className="text-base font-bold">Student Information</Label>
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="name" className="text-right">
-                  First name
-                </Label>
+                <Label className="text-right">First name</Label>
                 <p className="col-span-3 text-sm font-bold">{data?.data?.users?.UserInformation?.firstName ?? ''}</p>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="username" className="text-right">
-                  Middle name
-                </Label>
+                <Label className="text-right">Middle name</Label>
                 <p className="col-span-3 text-sm font-bold">{data?.data?.users?.UserInformation?.middleName ?? ''}</p>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="username" className="text-right">
-                  Last name
-                </Label>
+                <Label className="text-right">Last name</Label>
                 <p className="col-span-3 text-sm font-bold">{data?.data?.users?.UserInformation?.lastName ?? ''}</p>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="username" className="text-right">
-                  Student No.
-                </Label>
+                <Label className="text-right">Student No.</Label>
                 <p className="col-span-3 text-sm font-bold">{data?.data?.users?.UserInformation?.studentNo ?? ''}</p>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="username" className="text-right">
-                  Phone No.
-                </Label>
+                <Label className="text-right">Phone No.</Label>
                 <p className="col-span-3 text-sm font-bold">{data?.data?.users?.UserInformation?.phoneNo ?? ''}</p>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="username" className="text-right">
-                  Special Order No.
-                </Label>
+                <Label className="text-right">Special Order No.</Label>
                 <p className="col-span-3 text-sm font-bold">{data?.data?.users?.UserInformation?.specialOrder ?? ''}</p>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="username" className="text-right">
-                  isGraduate
-                </Label>
+                <Label className="text-right">isGraduate</Label>
                 <p className="col-span-3 text-sm font-bold">
                   {data?.data?.users?.UserInformation?.specialOrder ? 'YES' : 'NO'}
                 </p>
@@ -183,31 +267,24 @@ export default function ViewMoreModal(data: {
             </div>
           </div>
 
-          <div>
-            <Label htmlFor="name" className="text-1xl text-right font-bold">
-              Transaction Information
-            </Label>
+          {/* Transaction Information */}
+          <div className="mb-4">
+            <Label className="text-base font-bold">Transaction Information</Label>
             <div className="grid gap-4 py-4">
               {Number(totalDocumentFess) > 0 && (
                 <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="name" className="text-right">
-                    Document Fees
-                  </Label>
+                  <Label className="text-right">Document Fees</Label>
                   <p className="col-span-3 text-sm font-bold">{formatCurrency(Number(totalDocumentFess))}</p>
                 </div>
               )}
               {Number(totalShippingFees) > 0 && (
                 <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="name" className="text-right">
-                    Shipping Fees
-                  </Label>
+                  <Label className="text-right">Shipping Fees</Label>
                   <p className="col-span-3 text-sm font-bold">{formatCurrency(Number(totalShippingFees))}</p>
                 </div>
               )}
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="name" className="text-right">
-                  Total Amount
-                </Label>
+                <Label className="text-right">Total Amount</Label>
                 <p className="col-span-3 text-sm font-bold">
                   {(Number(totalDocumentFess) + Number(totalShippingFees)) > 0
                     ? formatCurrency(Number(totalDocumentFess) + Number(totalShippingFees))
@@ -215,9 +292,11 @@ export default function ViewMoreModal(data: {
                 </p>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="name" className="text-right">
-                  Status
-                </Label>
+                <Label className="text-right">Reference No.</Label>
+                <p className="col-span-3 text-sm font-bold">{data?.data?.documentPayment?.referenceNumber ?? ''}</p>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label className="text-right">Status</Label>
                 {data.mode === 'VIEW' && <p className="col-span-3 text-sm font-bold">{data.data.status}</p>}
                 {data.mode === 'EDIT' && (
                   <Select onValueChange={onChangeStatus} defaultValue={data?.data?.status ?? ''}>
@@ -258,7 +337,6 @@ export default function ViewMoreModal(data: {
                                 {status}
                               </SelectItem>
                             );
-
                           if (
                             status === 'PROCESSING' &&
                             (data?.data?.status === 'READYTOPICKUP' || data?.data?.status === 'OUTFORDELIVERY')
@@ -289,17 +367,13 @@ export default function ViewMoreModal(data: {
                 )}
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="username" className="text-right">
-                  Delivery Options
-                </Label>
+                <Label className="text-right">Delivery Options</Label>
                 <p className="col-span-3 text-sm font-bold">{data?.data?.deliverOptions ?? ''}</p>
               </div>
 
               {data?.data?.selectedSchedule ? (
                 <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="username" className="text-right">
-                    Appointment Date
-                  </Label>
+                  <Label className="text-right">Appointment Date</Label>
                   <p className="col-span-3 text-sm font-bold">
                     {moment(data?.data?.selectedSchedule).format('MMMM Do YYYY') || null}
                   </p>
@@ -307,15 +381,11 @@ export default function ViewMoreModal(data: {
               ) : (
                 <>
                   <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="username" className="text-right">
-                      Address
-                    </Label>
+                    <Label className="text-right">Address</Label>
                     <p className="col-span-3 text-sm font-bold">{data?.data?.address ?? ''}</p>
                   </div>
                   <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="username" className="text-right">
-                      Additional Address
-                    </Label>
+                    <Label className="text-right">Additional Address</Label>
                     <p className="col-span-3 text-sm font-bold">{data?.data?.additionalAddress ?? ''}</p>
                   </div>
                 </>
@@ -324,22 +394,11 @@ export default function ViewMoreModal(data: {
 
             {Number(latitude) !== 0 && Number(longitude) !== 0 && isLoaded && (
               <GoogleMap
-                mapContainerStyle={{
-                  width: '100%',
-                  height: '400px'
-                }}
-                center={{
-                  lat: Number(latitude) || 0,
-                  lng: Number(longitude) || 0
-                }}
+                mapContainerStyle={{ width: '100%', height: '400px' }}
+                center={{ lat: Number(latitude) || 0, lng: Number(longitude) || 0 }}
                 zoom={15}
               >
-                <Marker
-                  position={{
-                    lat: Number(latitude) || 0,
-                    lng: Number(longitude) || 0
-                  }}
-                />
+                <Marker position={{ lat: Number(latitude) || 0, lng: Number(longitude) || 0 }} />
               </GoogleMap>
             )}
           </div>
