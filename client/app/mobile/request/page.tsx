@@ -206,7 +206,7 @@ export default function MobileRequestPage() {
   };
 
   const formatDeliveryLabel = (opt: string) => {
-    const labels: Record<string, string> = { PICKUP: 'Pick Up', LALAMOVE: 'Delivery (Lalamove)' };
+    const labels: Record<string, string> = { PICKUP: 'Pick Up', LALAMOVE: 'Delivery' };
     return labels[opt] || opt;
   };
 

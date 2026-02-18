@@ -22,7 +22,7 @@ interface ShippingOption {
 
 const deliveryLabels: Record<string, string> = {
   PICKUP: 'Pick Up',
-  LALAMOVE: 'Delivery (Lalamove)'
+  LALAMOVE: 'Delivery'
 };
 
 export default function ShippingOptionsClient({
