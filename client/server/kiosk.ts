@@ -512,7 +512,7 @@ export async function checkScheduleForDate(date: string): Promise<{
   return transformedResult;
 }
 
-export async function uploadToCloudinary(data: FormData): Promise<cloudinary.UploadApiResponse> {
+export async function uploadToCloudinary(data: FormData): Promise<{ secure_url: string; public_id: string; format: string }> {
   cloudinary.v2.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
     api_key: process.env.CLOUDINARY_API_KEY,
@@ -525,21 +525,22 @@ export async function uploadToCloudinary(data: FormData): Promise<cloudinary.Upl
   const bytes = await file.arrayBuffer();
   const buffer = Buffer.from(bytes);
 
-  return new Promise((resolve, reject) => {
+  const result = await new Promise<cloudinary.UploadApiResponse>((resolve, reject) => {
     const uploadStream = cloudinary.v2.uploader.upload_stream(
       { resource_type: 'auto', folder: '/direct' },
-      (error, result) => {
-        if (error) {
-          return reject(error);
-        }
-        if (result) {
-          resolve(result);
-        } else {
-          reject(new Error('Upload failed, result is undefined'));
-        }
+      (error, res) => {
+        if (error) return reject(new Error(error.message || 'Cloudinary upload failed'));
+        if (res) return resolve(res);
+        reject(new Error('Upload failed, result is undefined'));
       }
     );
 
     uploadStream.end(buffer);
   });
+
+  return {
+    secure_url: result.secure_url,
+    public_id: result.public_id,
+    format: result.format
+  };
 }
