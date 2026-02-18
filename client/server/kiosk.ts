@@ -527,7 +527,7 @@ export async function uploadToCloudinary(data: FormData): Promise<{ secure_url: 
 
   const result = await new Promise<cloudinary.UploadApiResponse>((resolve, reject) => {
     const uploadStream = cloudinary.v2.uploader.upload_stream(
-      { resource_type: 'auto', folder: '/direct' },
+      { resource_type: 'image', folder: '/direct' },
       (error, res) => {
         if (error) return reject(new Error(error.message || 'Cloudinary upload failed'));
         if (res) return resolve(res);

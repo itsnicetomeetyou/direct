@@ -23,7 +23,7 @@ import {
   SelectValue
 } from '@/components/ui/select';
 import { EligibilityStatus } from '@prisma/client';
-import { Upload, X, FileText } from 'lucide-react';
+import { Upload, X } from 'lucide-react';
 import Image from 'next/image';
 
 const formSchema = z.object({
@@ -59,11 +59,11 @@ export default function DocumentsForm(data: Partial<Document>) {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
     if (!allowedTypes.includes(file.type)) {
       return toast({
         title: 'Invalid file type',
-        description: 'Please upload an image (JPG, PNG, WebP) or PDF file.',
+        description: 'Please upload an image file (JPG, PNG, or WebP).',
         variant: 'destructive'
       });
     }
@@ -77,11 +77,7 @@ export default function DocumentsForm(data: Partial<Document>) {
     }
 
     setSelectedFile(file);
-    if (file.type.startsWith('image/')) {
-      setPreviewUrl(URL.createObjectURL(file));
-    } else {
-      setPreviewUrl(null);
-    }
+    setPreviewUrl(URL.createObjectURL(file));
   };
 
   const removeFile = () => {
@@ -280,25 +276,18 @@ export default function DocumentsForm(data: Partial<Document>) {
             <div>
               <FormLabel>Sample Document</FormLabel>
               <p className="mb-2 text-sm text-muted-foreground">
-                Upload a sample image of the document (JPG, PNG, WebP, or PDF). Max 5MB.
+                Upload a sample image of the document (JPG, PNG, or WebP). Max 5MB.
               </p>
 
               {(previewUrl || (sampleDocsUrl && !selectedFile)) ? (
                 <div className="relative inline-block">
-                  {(previewUrl || sampleDocsUrl)?.match(/\.pdf$/i) ? (
-                    <div className="flex h-48 w-48 flex-col items-center justify-center rounded-lg border bg-muted/30">
-                      <FileText className="mb-2 h-12 w-12 text-muted-foreground" />
-                      <span className="text-xs text-muted-foreground">PDF Document</span>
-                    </div>
-                  ) : (
-                    <Image
-                      src={previewUrl || sampleDocsUrl || ''}
-                      alt="Sample document preview"
-                      width={192}
-                      height={192}
-                      className="h-48 w-48 rounded-lg border object-cover"
-                    />
-                  )}
+                  <Image
+                    src={previewUrl || sampleDocsUrl || ''}
+                    alt="Sample document preview"
+                    width={192}
+                    height={192}
+                    className="h-48 w-48 rounded-lg border object-cover"
+                  />
                   <button
                     type="button"
                     onClick={removeFile}
@@ -314,14 +303,14 @@ export default function DocumentsForm(data: Partial<Document>) {
                 >
                   <Upload className="mb-2 h-8 w-8 text-muted-foreground" />
                   <span className="text-sm font-medium text-muted-foreground">Click to upload sample document</span>
-                  <span className="mt-1 text-xs text-muted-foreground">JPG, PNG, WebP, or PDF</span>
+                  <span className="mt-1 text-xs text-muted-foreground">JPG, PNG, or WebP</span>
                 </div>
               )}
 
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="image/jpeg,image/png,image/webp,application/pdf"
+                accept="image/jpeg,image/png,image/webp"
                 onChange={handleFileSelect}
                 className="hidden"
                 disabled={isLoading}
