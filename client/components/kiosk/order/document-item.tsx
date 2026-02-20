@@ -5,7 +5,6 @@ import { addToOrder, removeFromOrder } from '@/store/kiosk/orderSlice';
 import { DocumentItemProps } from '@/types';
 import { X } from 'lucide-react';
 import { Poppins } from 'next/font/google';
-import Image from 'next/image';
 import React from 'react';
 
 const poppins = Poppins({
@@ -26,17 +25,6 @@ export default function DocumentItem(item: DocumentItemProps) {
           <X className="rounded-full p-1 hover:bg-red-500" size={30} />
         </div>
         <div className="flex h-full flex-col items-center justify-between p-4 py-6">
-          {item.sampleDocs && (
-            <div className="mb-3 overflow-hidden rounded-lg">
-              <Image
-                src={item.sampleDocs}
-                alt={item.name}
-                width={96}
-                height={96}
-                className="h-24 w-24 object-cover"
-              />
-            </div>
-          )}
           <div className="text-center">
             <h3 className={`font-semibold text-white ${poppins.className} text-lg font-semibold`}>{item.name}</h3>
             {Number(item.price) > 0 && (
@@ -52,17 +40,6 @@ export default function DocumentItem(item: DocumentItemProps) {
   return (
     <button key={item.id} className="rounded-2xl bg-gray-200" onClick={() => dispatch(addToOrder(item))}>
       <div className="flex h-full flex-col items-center justify-between p-4 py-6">
-        {item.sampleDocs && (
-          <div className="mb-3 overflow-hidden rounded-lg">
-            <Image
-              src={item.sampleDocs}
-              alt={item.name}
-              width={96}
-              height={96}
-              className="h-24 w-24 object-cover"
-            />
-          </div>
-        )}
         <div className="text-center">
           <h3 className={`font-semibold text-black ${poppins.className} text-lg font-semibold`}>{item.name}</h3>
           {Number(item.price) > 0 && (

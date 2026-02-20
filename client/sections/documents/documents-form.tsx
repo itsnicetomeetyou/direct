@@ -7,8 +7,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { createDocument, updateDocument } from '@/server/document';
-import { uploadToCloudinary } from '@/server/kiosk';
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import { useRouter } from 'next/navigation';
 import { Switch } from '@/components/ui/switch';
@@ -23,8 +22,6 @@ import {
   SelectValue
 } from '@/components/ui/select';
 import { EligibilityStatus } from '@prisma/client';
-import { Upload, X } from 'lucide-react';
-import Image from 'next/image';
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -39,10 +36,6 @@ const formSchema = z.object({
 
 export default function DocumentsForm(data: Partial<Document>) {
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [sampleDocsUrl, setSampleDocsUrl] = useState<string | null>(data.sampleDocs ?? null);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(data.sampleDocs ?? null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const router = useRouter();
   const form = useForm<z.infer<typeof formSchema>>({
@@ -55,61 +48,15 @@ export default function DocumentsForm(data: Partial<Document>) {
     }
   });
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-    if (!allowedTypes.includes(file.type)) {
-      return toast({
-        title: 'Invalid file type',
-        description: 'Please upload an image file (JPG, PNG, or WebP).',
-        variant: 'destructive'
-      });
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      return toast({
-        title: 'File too large',
-        description: 'File must be less than 5MB.',
-        variant: 'destructive'
-      });
-    }
-
-    setSelectedFile(file);
-    setPreviewUrl(URL.createObjectURL(file));
-  };
-
-  const removeFile = () => {
-    setSelectedFile(null);
-    setPreviewUrl(null);
-    setSampleDocsUrl(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
-
-  async function uploadFile(): Promise<string | null> {
-    if (!selectedFile) return sampleDocsUrl;
-    const formData = new FormData();
-    formData.append('sampleDocs', selectedFile);
-    const result = await uploadToCloudinary(formData);
-    if (!result?.secure_url) {
-      throw new Error('Upload succeeded but no URL was returned.');
-    }
-    return result.secure_url;
-  }
-
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
       setIsLoading(true);
-      const uploadedUrl = await uploadFile();
       const response = await createDocument({
         name: values.name,
         price: values.price.toString(),
         isAvailable: values.isAvailable.toString(),
         eligibility: values.eligibility,
-        sampleDocs: uploadedUrl
+        sampleDocs: null
       });
       if (response.id) {
         router.push('/dashboard/documents');
@@ -135,13 +82,12 @@ export default function DocumentsForm(data: Partial<Document>) {
     try {
       setIsLoading(true);
       if (data.id) {
-        const uploadedUrl = await uploadFile();
         const response = await updateDocument(data.id, {
           name: values.name,
           price: values.price.toString(),
           isAvailable: values.isAvailable.toString(),
           eligibility: values.eligibility,
-          sampleDocs: uploadedUrl
+          sampleDocs: null
         });
         if (response.id) {
           router.push('/dashboard/documents');
@@ -268,50 +214,6 @@ export default function DocumentsForm(data: Partial<Document>) {
                 )}
               />
 
-            </div>
-
-            <div>
-              <FormLabel>Sample Document</FormLabel>
-              <p className="mb-2 text-sm text-muted-foreground">
-                Upload a sample image of the document (JPG, PNG, or WebP). Max 5MB.
-              </p>
-
-              {(previewUrl || (sampleDocsUrl && !selectedFile)) ? (
-                <div className="relative inline-block">
-                  <Image
-                    src={previewUrl || sampleDocsUrl || ''}
-                    alt="Sample document preview"
-                    width={192}
-                    height={192}
-                    className="h-48 w-48 rounded-lg border object-cover"
-                  />
-                  <button
-                    type="button"
-                    onClick={removeFile}
-                    className="absolute -right-2 -top-2 rounded-full bg-red-500 p-1 text-white hover:bg-red-600"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
-              ) : (
-                <div
-                  onClick={() => fileInputRef.current?.click()}
-                  className="flex h-48 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/25 transition-colors hover:border-muted-foreground/50"
-                >
-                  <Upload className="mb-2 h-8 w-8 text-muted-foreground" />
-                  <span className="text-sm font-medium text-muted-foreground">Click to upload sample document</span>
-                  <span className="mt-1 text-xs text-muted-foreground">JPG, PNG, or WebP</span>
-                </div>
-              )}
-
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                onChange={handleFileSelect}
-                className="hidden"
-                disabled={isLoading}
-              />
             </div>
 
             <Button type="submit" disabled={isLoading}>
