@@ -55,7 +55,6 @@ export async function createUser(data: {
   firstName?: string;
   lastName?: string;
   studentNo?: string;
-  lrn?: string;
   address?: string;
   phoneNo?: string;
   middleName?: string;
@@ -84,7 +83,6 @@ export async function createUser(data: {
         middleName: data.middleName || null,
         lastName: data.lastName,
         studentNo: data.studentNo || '',
-        lrn: data.lrn || '',
         address: data.address || '',
         phoneNo: data.phoneNo || '',
         userId: user.id
@@ -107,7 +105,6 @@ export async function updateUser(
     lastName?: string;
     middleName?: string;
     studentNo?: string;
-    lrn?: string;
     address?: string;
     phoneNo?: string;
   }
@@ -139,7 +136,6 @@ export async function updateUser(
           ...(data.lastName && { lastName: data.lastName }),
           ...(data.middleName !== undefined && { middleName: data.middleName || null }),
           ...(data.studentNo && { studentNo: data.studentNo }),
-          ...(data.lrn && { lrn: data.lrn }),
           ...(data.address && { address: data.address }),
           ...(data.phoneNo && { phoneNo: data.phoneNo })
         }
@@ -151,7 +147,6 @@ export async function updateUser(
           middleName: data.middleName || null,
           lastName: data.lastName,
           studentNo: data.studentNo || '',
-          lrn: data.lrn || '',
           address: data.address || '',
           phoneNo: data.phoneNo || '',
           userId

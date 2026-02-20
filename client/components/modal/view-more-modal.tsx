@@ -254,16 +254,6 @@ export default function ViewMoreModal(data: {
                 <Label className="text-right">Phone No.</Label>
                 <p className="col-span-3 text-sm font-bold">{data?.data?.users?.UserInformation?.phoneNo ?? ''}</p>
               </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label className="text-right">Special Order No.</Label>
-                <p className="col-span-3 text-sm font-bold">{data?.data?.users?.UserInformation?.specialOrder ?? ''}</p>
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label className="text-right">isGraduate</Label>
-                <p className="col-span-3 text-sm font-bold">
-                  {data?.data?.users?.UserInformation?.specialOrder ? 'YES' : 'NO'}
-                </p>
-              </div>
             </div>
           </div>
 

@@ -59,7 +59,6 @@ interface UserItem {
   lastName: string;
   middleName: string;
   studentNo: string;
-  lrn: string;
   address: string;
   phoneNo: string;
 }
@@ -96,7 +95,6 @@ export default function UserManagementClient({
     lastName: '',
     middleName: '',
     studentNo: '',
-    lrn: '',
     address: '',
     phoneNo: ''
   });
@@ -134,7 +132,6 @@ export default function UserManagementClient({
         lastName: '',
         middleName: '',
         studentNo: '',
-        lrn: '',
         address: '',
         phoneNo: ''
       });
@@ -286,25 +283,14 @@ export default function UserManagementClient({
                   }
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Student No.</Label>
-                  <Input
-                    value={newUser.studentNo}
-                    onChange={(e) =>
-                      setNewUser({ ...newUser, studentNo: e.target.value })
-                    }
-                  />
-                </div>
-                <div>
-                  <Label>LRN</Label>
-                  <Input
-                    value={newUser.lrn}
-                    onChange={(e) =>
-                      setNewUser({ ...newUser, lrn: e.target.value })
-                    }
-                  />
-                </div>
+              <div>
+                <Label>Student No.</Label>
+                <Input
+                  value={newUser.studentNo}
+                  onChange={(e) =>
+                    setNewUser({ ...newUser, studentNo: e.target.value })
+                  }
+                />
               </div>
               <div>
                 <Label>Phone No.</Label>

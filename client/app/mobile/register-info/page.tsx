@@ -21,8 +21,6 @@ export default function MobileRegisterInfoPage() {
     address: '',
     birthDate: '',
     studentNo: '',
-    specialOrder: '',
-    lrn: '',
   });
   const router = useRouter();
   const { toast } = useToast();
@@ -32,7 +30,7 @@ export default function MobileRegisterInfoPage() {
 
   const canGoNext = () => {
     if (step === 0) return form.firstName && form.lastName && form.phoneNo && form.address && form.birthDate;
-    if (step === 1) return form.studentNo && form.lrn;
+    if (step === 1) return form.studentNo;
     return true;
   };
 
@@ -94,8 +92,6 @@ export default function MobileRegisterInfoPage() {
         {step === 1 && (
           <div className="space-y-3">
             <Input placeholder="Student Number *" value={form.studentNo} onChange={(e) => update('studentNo', e.target.value)} className="h-11 rounded-lg bg-muted/50" required />
-            <Input placeholder="Special Order Number" value={form.specialOrder} onChange={(e) => update('specialOrder', e.target.value)} className="h-11 rounded-lg bg-muted/50" />
-            <Input placeholder="LRN (Learner Reference No.) *" value={form.lrn} onChange={(e) => update('lrn', e.target.value)} className="h-11 rounded-lg bg-muted/50" required />
           </div>
         )}
 
@@ -111,8 +107,6 @@ export default function MobileRegisterInfoPage() {
             <h3 className="pt-2 font-semibold text-muted-foreground">Academic</h3>
             <div className="rounded-lg bg-muted/50 p-3 space-y-1">
               <p><span className="text-muted-foreground">Student No:</span> {form.studentNo}</p>
-              {form.specialOrder && <p><span className="text-muted-foreground">Special Order:</span> {form.specialOrder}</p>}
-              <p><span className="text-muted-foreground">LRN:</span> {form.lrn}</p>
             </div>
           </div>
         )}

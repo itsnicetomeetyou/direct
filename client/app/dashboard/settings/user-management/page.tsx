@@ -42,7 +42,6 @@ export default async function UserManagementPage({
     lastName: u.UserInformation?.lastName || '',
     middleName: u.UserInformation?.middleName || '',
     studentNo: u.UserInformation?.studentNo || '',
-    lrn: u.UserInformation?.lrn || '',
     address: u.UserInformation?.address || '',
     phoneNo: u.UserInformation?.phoneNo || ''
   }));

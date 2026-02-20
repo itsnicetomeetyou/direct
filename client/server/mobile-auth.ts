@@ -322,8 +322,6 @@ export async function mobileSaveUserInfo(data: {
   middleName?: string;
   lastName: string;
   studentNo: string;
-  specialOrder?: string;
-  lrn: string;
   address: string;
   phoneNo: string;
   birthDate?: string;
