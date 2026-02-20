@@ -24,7 +24,7 @@ export default function KioskPage() {
     <>
       <header className="flex h-[10vh] items-center justify-between">
         <div className="flex flex-row items-center">
-          <Image src="/images/direct_logo.png" height={80} width={80} alt="DiReCT's Logo" className="rounded-full" />
+          <Image src="/images/direct_logo.png" height={80} width={80} alt="DiReCT's Logo" />
           <p className={`ml-3 ${poppins.className} text-3xl font-bold`}>DiReCT</p>
         </div>
         <div className="text-sm">
