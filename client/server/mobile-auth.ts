@@ -322,6 +322,7 @@ export async function mobileSaveUserInfo(data: {
   middleName?: string;
   lastName: string;
   studentNo: string;
+  specialOrder?: string;
   address: string;
   phoneNo: string;
   birthDate?: string;

@@ -21,6 +21,7 @@ export default function MobileRegisterInfoPage() {
     address: '',
     birthDate: '',
     studentNo: '',
+    specialOrder: '',
   });
   const router = useRouter();
   const { toast } = useToast();
@@ -92,6 +93,33 @@ export default function MobileRegisterInfoPage() {
         {step === 1 && (
           <div className="space-y-3">
             <Input placeholder="Student Number *" value={form.studentNo} onChange={(e) => update('studentNo', e.target.value)} className="h-11 rounded-lg bg-muted/50" required />
+            <div>
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">Are you a graduate? *</label>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => update('specialOrder', 'YES')}
+                  className={`flex-1 rounded-lg border-2 px-4 py-2.5 text-sm font-medium transition-colors ${
+                    form.specialOrder === 'YES'
+                      ? 'border-blue-500 bg-blue-50 text-blue-700'
+                      : 'border-gray-200 bg-muted/50 text-gray-600 hover:border-gray-300'
+                  }`}
+                >
+                  Yes
+                </button>
+                <button
+                  type="button"
+                  onClick={() => update('specialOrder', '')}
+                  className={`flex-1 rounded-lg border-2 px-4 py-2.5 text-sm font-medium transition-colors ${
+                    form.specialOrder === ''
+                      ? 'border-blue-500 bg-blue-50 text-blue-700'
+                      : 'border-gray-200 bg-muted/50 text-gray-600 hover:border-gray-300'
+                  }`}
+                >
+                  No
+                </button>
+              </div>
+            </div>
           </div>
         )}
 
@@ -107,6 +135,7 @@ export default function MobileRegisterInfoPage() {
             <h3 className="pt-2 font-semibold text-muted-foreground">Academic</h3>
             <div className="rounded-lg bg-muted/50 p-3 space-y-1">
               <p><span className="text-muted-foreground">Student No:</span> {form.studentNo}</p>
+              <p><span className="text-muted-foreground">Graduate:</span> {form.specialOrder === 'YES' ? 'Yes' : 'No'}</p>
             </div>
           </div>
         )}
