@@ -138,7 +138,7 @@ export default function MobileRequestPage() {
       toast({ variant: 'destructive', title: 'Error', description: 'Please select a delivery option.' });
       return;
     }
-    if (!paymentOption) {
+    if (totalFees > 0 && !paymentOption) {
       toast({ variant: 'destructive', title: 'Error', description: 'Please select a payment method.' });
       return;
     }
@@ -173,7 +173,7 @@ export default function MobileRequestPage() {
       const result = await mobileSubmitRequest({
         documentIds: selectedDocs,
         deliveryOption,
-        paymentOption,
+        paymentOption: totalFees > 0 ? paymentOption : '',
         schedule: schedule || undefined,
         address: deliveryOption !== 'PICKUP' ? address : undefined,
         additionalAddress: deliveryOption !== 'PICKUP' ? additionalAddress : undefined,
@@ -223,7 +223,7 @@ export default function MobileRequestPage() {
     return {
       schedule: n,
       address: deliveryOption !== 'PICKUP' ? ++n : n,
-      payment: ++n,
+      payment: totalFees > 0 ? ++n : 0,
     };
   })();
 
@@ -375,29 +375,31 @@ export default function MobileRequestPage() {
         </div>
       )}
 
-      {/* Step 5: Payment Method */}
-      <div className="mb-6">
-        <div className="mb-3 flex items-center gap-2">
-          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-xs font-bold text-white">
-            {deliveryOption !== 'PICKUP' && deliveryOption !== '' ? '5' : '4'}
+      {/* Step: Payment Method (hidden when total is free) */}
+      {totalFees > 0 && (
+        <div className="mb-6">
+          <div className="mb-3 flex items-center gap-2">
+            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-xs font-bold text-white">
+              {stepNum.payment}
+            </div>
+            <h2 className="text-sm font-semibold text-muted-foreground">Payment Method</h2>
           </div>
-          <h2 className="text-sm font-semibold text-muted-foreground">Payment Method</h2>
+          <div className="grid grid-cols-2 gap-2">
+            {paymentOptions.map((opt) => (
+              <button
+                key={opt}
+                onClick={() => setPaymentOption(opt)}
+                className={`flex items-center justify-center gap-2 rounded-xl border py-3 text-center text-sm font-medium transition ${
+                  paymentOption === opt ? 'border-primary bg-primary text-white' : 'bg-card hover:border-primary/30'
+                }`}
+              >
+                <CreditCard className="h-4 w-4" />
+                {formatPaymentLabel(opt)}
+              </button>
+            ))}
+          </div>
         </div>
-        <div className="grid grid-cols-2 gap-2">
-          {paymentOptions.map((opt) => (
-            <button
-              key={opt}
-              onClick={() => setPaymentOption(opt)}
-              className={`flex items-center justify-center gap-2 rounded-xl border py-3 text-center text-sm font-medium transition ${
-                paymentOption === opt ? 'border-primary bg-primary text-white' : 'bg-card hover:border-primary/30'
-              }`}
-            >
-              <CreditCard className="h-4 w-4" />
-              {formatPaymentLabel(opt)}
-            </button>
-          ))}
-        </div>
-      </div>
+      )}
 
       {/* Summary */}
       {selectedDocs.length > 0 && (
@@ -440,7 +442,7 @@ export default function MobileRequestPage() {
                 Delivery: {formatDeliveryLabel(deliveryOption)}
                 {schedule ? ` | Schedule: ${moment(schedule).format('MMM D, YYYY')}` : ''}
               </p>
-              <p>Payment: {formatPaymentLabel(paymentOption)}</p>
+              {totalFees > 0 && <p>Payment: {formatPaymentLabel(paymentOption)}</p>}
             </div>
           )}
         </div>

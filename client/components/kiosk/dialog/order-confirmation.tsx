@@ -39,23 +39,31 @@ export default function OrderConfirmation(props: { open: boolean; onClose: () =>
   const router = useRouter();
   const dispatch = useAppDispatch();
   const selectedDocuments = useAppSelector((state) => state.kioskOrder.orderData);
+  const orderItems = useAppSelector((state) => state.kioskOrder.order);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  // PICKUP → skip Address (index 2), Delivery → show all tabs (no skip)
-  const skipIndex = selectedDocuments.shippingOptions === 'PICKUP' ? 2 : -1;
+  const totalCost = orderItems.reduce((sum, item) => sum + item.price, 0);
+
+  const skipIndices = new Set<number>();
+  if (selectedDocuments.shippingOptions === 'PICKUP') skipIndices.add(2);
+  if (totalCost <= 0) skipIndices.add(4);
+
+  const lastVisibleIndex = [4, 3, 2, 1, 0].find((i) => !skipIndices.has(i)) ?? 0;
 
   const handleNextClick = () => {
     setSelectedIndex((prevIndex) => {
-      const next = prevIndex + 1;
-      return next === skipIndex ? next + 1 : next;
+      let next = prevIndex + 1;
+      while (skipIndices.has(next) && next <= 4) next++;
+      return Math.min(next, lastVisibleIndex);
     });
   };
 
   const handleBackClick = () => {
     setSelectedIndex((prevIndex) => {
-      const prev = prevIndex - 1;
-      return prev === skipIndex ? prev - 1 : prev;
+      let prev = prevIndex - 1;
+      while (skipIndices.has(prev) && prev >= 0) prev--;
+      return Math.max(prev, 0);
     });
   };
 
@@ -182,7 +190,7 @@ export default function OrderConfirmation(props: { open: boolean; onClose: () =>
             <TabGroup selectedIndex={selectedIndex}>
               <TabList className="flex space-x-1 rounded-xl p-1">
                 {tabs.map((tab, index) => {
-                  const isSkipped = index === skipIndex;
+                  const isSkipped = skipIndices.has(index);
                   return (
                     <Tab
                       key={index}
@@ -248,7 +256,7 @@ export default function OrderConfirmation(props: { open: boolean; onClose: () =>
                 </Button>
               )}
 
-              {selectedIndex === 4 ? (
+              {selectedIndex === lastVisibleIndex ? (
                 <Button
                   className={`inline-flex items-center gap-2 rounded-md bg-blue-500 px-5 py-2 text-sm/6 font-medium text-white shadow-inner  focus:outline-none data-[hover]:bg-blue-600 data-[open]:bg-gray-700 data-[focus]:outline-1 data-[focus]:outline-white ${poppins.className} font-semibold`}
                   onClick={onClickConfirm}

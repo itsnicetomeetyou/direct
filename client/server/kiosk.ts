@@ -180,9 +180,25 @@ export async function fetchOrderDocument(data: IOrderDocument): Promise<Document
       userId: findUser.userId
     }));
 
-    // Validate the payment option
-    if (data.paymentOptions === null || !Object.values(PaymentOptions).includes(data.paymentOptions)) {
-      throw new Error('Invalid Payment Option');
+    // Calculate the total price of the selected documents
+    const documentIds = data.documentSelected;
+    const documents = await prisma.documents.findMany({
+      where: {
+        id: { in: documentIds }
+      },
+      select: {
+        name: true,
+        price: true
+      }
+    });
+
+    const totalDocumentAmount = documents.reduce((sum, doc) => sum + Number(doc.price), 0);
+
+    // Validate the payment option (skip when total is 0 / free)
+    if (totalDocumentAmount > 0) {
+      if (data.paymentOptions === null || !Object.values(PaymentOptions).includes(data.paymentOptions)) {
+        throw new Error('Invalid Payment Option');
+      }
     }
 
     // Check if delivery option is selected and schedule is not null
@@ -205,20 +221,6 @@ export async function fetchOrderDocument(data: IOrderDocument): Promise<Document
       const schedule = await checkScheduleForDate(moment(data.selectedSchedule).format('YYYY-MM-DD'));
       if (schedule.disabled) throw new Error('Schedule is already full');
     }
-
-    // Calculate the total price of the selected documents
-    const documentIds = data.documentSelected;
-    const documents = await prisma.documents.findMany({
-      where: {
-        id: { in: documentIds }
-      },
-      select: {
-        name: true,
-        price: true
-      }
-    });
-
-    const totalDocumentAmount = documents.reduce((sum, doc) => sum + Number(doc.price), 0);
 
     // Xendit payment integration (bypassed when disabled)
     let xenditInvoiceId: string | null = null;

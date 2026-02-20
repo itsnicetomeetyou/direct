@@ -645,10 +645,18 @@ export async function mobileSubmitRequest(data: {
     const session = await getMobileSession();
     if (!session) return { error: 'Not authenticated.' };
 
-    // ── Validate payment option ──
+    // ── Compute total to determine if payment is needed ──
+    const selectedDocPrices = await prisma.documents.findMany({
+      where: { id: { in: data.documentIds } },
+      select: { price: true },
+    });
+    const isFreeOrder = selectedDocPrices.reduce((sum, d) => sum + Number(d.price), 0) <= 0;
+
+    // ── Validate payment option (skip for free orders) ──
     if (
-      !data.paymentOption ||
-      !Object.values(PaymentOptions).includes(data.paymentOption as PaymentOptions)
+      !isFreeOrder &&
+      (!data.paymentOption ||
+        !Object.values(PaymentOptions).includes(data.paymentOption as PaymentOptions))
     ) {
       return { error: 'Invalid payment option.' };
     }
@@ -765,7 +773,7 @@ export async function mobileSubmitRequest(data: {
     const payment = await prisma.documentPayment.create({
       data: {
         referenceNumber: referenceNumber || 'DiReCT-0001',
-        paymentOptions: data.paymentOption as PaymentOptions,
+        paymentOptions: isFreeOrder ? null : (data.paymentOption as PaymentOptions),
         totalAmount: totalDocumentAmount,
         xenditInvoiceId,
       },
