@@ -27,7 +27,7 @@ model UserInformation {
   lastName     String
   studentNo    String
   specialOrder String?
-  lrn          String
+  lrn          String?
   address      String   @db.Text
   userId       String   @unique @db.VarChar(36)
   createdAt    DateTime @default(now())
