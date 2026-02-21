@@ -3,11 +3,19 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
+import { Poppins } from 'next/font/google';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { mobileLogin } from '@/server/mobile-auth';
 import { useToast } from '@/components/ui/use-toast';
+import LiveDate from '@/components/kiosk/live-date';
+
+const poppins = Poppins({
+  weight: ['100', '200', '300', '400', '600', '900'],
+  subsets: ['latin']
+});
 
 export default function MobileLoginPage() {
   const [email, setEmail] = useState('');
@@ -41,9 +49,15 @@ export default function MobileLoginPage() {
   };
 
   return (
-    <div className="flex h-full flex-col overflow-y-auto bg-gradient-to-br from-[#E900C4] to-[#007AEB] px-6 pt-20">
-      <div className="mb-8">
-        <p className="text-2xl text-white">Hey there 👋</p>
+    <div className="flex h-full flex-col overflow-y-auto bg-gradient-to-br from-[#E900C4] to-[#007AEB] px-6 pt-8">
+      <div className="mb-8 flex items-center justify-between">
+        <div className="flex items-center">
+          <Image src="/images/direct_logo.png" height={50} width={50} alt="DiReCT's Logo" />
+          <p className={`ml-2 ${poppins.className} text-xl font-bold text-white`}>DiReCT+</p>
+        </div>
+        <span className={`${poppins.className} text-xs font-medium text-white`}>
+          <LiveDate />
+        </span>
       </div>
 
       <div className="rounded-2xl bg-white p-6 shadow-xl">
