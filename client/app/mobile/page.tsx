@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { redirect } from 'next/navigation';
 import { getMobileSession } from '@/server/mobile-auth';
 
@@ -18,12 +19,10 @@ export default async function MobileWelcomePage() {
   return (
     <div className="flex h-full flex-col items-center justify-center overflow-y-auto bg-gradient-to-br from-[#E900C4] to-[#007AEB] px-6">
       <div className="flex flex-1 flex-col items-center justify-center">
-        <div className="mb-6 flex h-28 w-28 items-center justify-center rounded-full bg-white/20 backdrop-blur">
-          <span className="text-4xl font-extrabold text-white">D</span>
-        </div>
+        <Image src="/images/direct_logo.png" height={120} width={120} alt="DiReCT's Logo" className="mb-6" />
 
         <h1 className="mb-2 text-center text-4xl font-extrabold text-white">
-          WELCOME TO DiReCT
+          WELCOME TO DiReCT+
         </h1>
         <p className="text-center text-sm font-medium text-white/90">
           Digital Record and Credential Transaction
