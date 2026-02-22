@@ -470,48 +470,78 @@ export async function checkScheduleForDate(date: string): Promise<{
   count: string;
   date: string;
   disabled: boolean;
+  maxSlots: number;
+  remaining: number;
 }> {
-  // Limit the number of schedules per date
-  const limitPerDate = 300;
-  // Validate the input date format (YYYY-MM-DD)
+  const config = await fetchScheduleConfig();
+  const maxSlots = config.maxSlotsPerDay;
+
   const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
   if (!dateRegex.test(date)) {
     throw new Error('Invalid date format. Please use YYYY-MM-DD.');
   }
-  // Parse the input date to a Date object
+
   const parsedDate = new Date(date);
 
-  // Find request documents for the specified date
   const result = await prisma.requestDocuments.groupBy({
     by: ['selectedSchedule'],
     where: {
-      selectedSchedule: {
-        equals: parsedDate
-      },
+      selectedSchedule: { equals: parsedDate },
       OR: [{ status: 'PENDING' }, { status: 'PAID' }, { status: 'PROCESSING' }, { status: 'READYTOPICKUP' }]
     },
-    _count: {
-      selectedSchedule: true
-    }
+    _count: { selectedSchedule: true }
   });
 
   if (result.length === 0) {
-    return {
-      count: '0',
-      date: date,
-      disabled: false
+    return { count: '0', date, disabled: false, maxSlots, remaining: maxSlots };
+  }
+
+  const used = result[0]._count.selectedSchedule;
+  const remaining = Math.max(0, maxSlots - used);
+
+  return {
+    count: used.toString(),
+    date: result[0].selectedSchedule
+      ? result[0].selectedSchedule.toISOString().split('T')[0].replace(/-/g, '/')
+      : '',
+    disabled: used >= maxSlots,
+    maxSlots,
+    remaining
+  };
+}
+
+export async function checkScheduleForMonth(year: number, month: number): Promise<
+  Record<string, { used: number; maxSlots: number; remaining: number; disabled: boolean }>
+> {
+  const config = await fetchScheduleConfig();
+  const maxSlots = config.maxSlotsPerDay;
+
+  const startDate = new Date(year, month - 1, 1);
+  const endDate = new Date(year, month, 0, 23, 59, 59, 999);
+
+  const result = await prisma.requestDocuments.groupBy({
+    by: ['selectedSchedule'],
+    where: {
+      selectedSchedule: { gte: startDate, lte: endDate },
+      OR: [{ status: 'PENDING' }, { status: 'PAID' }, { status: 'PROCESSING' }, { status: 'READYTOPICKUP' }]
+    },
+    _count: { selectedSchedule: true }
+  });
+
+  const slotMap: Record<string, { used: number; maxSlots: number; remaining: number; disabled: boolean }> = {};
+  for (const item of result) {
+    if (!item.selectedSchedule) continue;
+    const dateKey = moment(item.selectedSchedule).format('YYYY-MM-DD');
+    const used = item._count.selectedSchedule;
+    slotMap[dateKey] = {
+      used,
+      maxSlots,
+      remaining: Math.max(0, maxSlots - used),
+      disabled: used >= maxSlots
     };
   }
 
-  // Transform the result to the desired format
-  const item = result[0];
-  const transformedResult = {
-    count: item._count.selectedSchedule.toString(),
-    date: item.selectedSchedule ? item.selectedSchedule.toISOString().split('T')[0].replace(/-/g, '/') : '',
-    disabled: item._count.selectedSchedule > limitPerDate
-  };
-
-  return transformedResult;
+  return slotMap;
 }
 
 export async function uploadToCloudinary(data: FormData): Promise<{ secure_url: string; public_id: string; format: string }> {

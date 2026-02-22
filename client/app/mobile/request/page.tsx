@@ -332,13 +332,13 @@ export default function MobileRequestPage() {
               </p>
             ) : scheduleStatus?.disabled ? (
               <p className="text-xs font-medium text-destructive">
-                This date is full ({scheduleStatus.count}/{scheduleConfig.maxSlotsPerDay} slots). Please choose another date.
+                This date is full (0/{scheduleConfig.maxSlotsPerDay} slots remaining). Please choose another date.
               </p>
             ) : isDateDisabled(schedule) ? (
               <p className="text-xs font-medium text-destructive">{isDateDisabled(schedule)}</p>
             ) : (
               <p className="text-xs text-green-600">
-                Available ({scheduleStatus?.count || 0}/{scheduleConfig.maxSlotsPerDay} slots used)
+                Available — {scheduleConfig.maxSlotsPerDay - (scheduleStatus?.count || 0)}/{scheduleConfig.maxSlotsPerDay} slots remaining
               </p>
             )}
           </div>
