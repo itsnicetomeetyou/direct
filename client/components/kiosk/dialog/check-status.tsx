@@ -97,15 +97,16 @@ export default function CheckStatus(props: {
         <div className="flex min-h-full items-end justify-center p-4 sm:items-center sm:p-0 ">
           <DialogPanel
             transition
-            className="data-[closed]:transform-[scale(95%)] w-full max-w-2xl rounded-xl bg-white p-6 backdrop-blur-2xl duration-300 ease-out data-[closed]:opacity-0 "
+            className="select-none data-[closed]:transform-[scale(95%)] w-full max-w-2xl rounded-xl bg-white p-6 backdrop-blur-2xl duration-300 ease-out data-[closed]:opacity-0 "
+            style={{ userSelect: 'none', WebkitUserSelect: 'none' } as React.CSSProperties}
           >
             <DialogTitle
               as="h3"
-              className={`text-center text-2xl font-medium text-black/75 ${poppins.className} font-semibold`}
+              className={`select-none text-center text-2xl font-medium text-black/75 ${poppins.className} font-semibold`}
             >
               Reference Number
             </DialogTitle>
-            <p className={`mt-1 text-sm text-black/30 ${poppins.className} mb-4 text-center font-medium`}>
+            <p className={`select-none mt-1 text-sm text-black/30 ${poppins.className} mb-4 text-center font-medium`}>
               Please enter your reference number before to proceed.
             </p>
             <Input

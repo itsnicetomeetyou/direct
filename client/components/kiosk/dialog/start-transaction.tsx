@@ -148,17 +148,18 @@ export default function StartTransaction(props: {
         <div className="flex min-h-full items-end justify-center p-4 sm:items-center sm:p-0 ">
           <DialogPanel
             transition
-            className="data-[closed]:transform-[scale(95%)] w-full max-w-2xl rounded-xl bg-white p-6 backdrop-blur-2xl duration-300 ease-out data-[closed]:opacity-0 "
+            className="select-none data-[closed]:transform-[scale(95%)] w-full max-w-2xl rounded-xl bg-white p-6 backdrop-blur-2xl duration-300 ease-out data-[closed]:opacity-0 "
+            style={{ userSelect: 'none', WebkitUserSelect: 'none' } as React.CSSProperties}
           >
             {step === 'studentNo' ? (
               <>
                 <DialogTitle
                   as="h3"
-                  className={`text-center text-2xl font-medium text-black/75 ${poppins.className} font-semibold `}
+                  className={`select-none text-center text-2xl font-medium text-black/75 ${poppins.className} font-semibold `}
                 >
                   Student Number
                 </DialogTitle>
-                <p className={`mt-1 text-sm text-black/30 ${poppins.className} mb-4 text-center font-medium`}>
+                <p className={`select-none mt-1 text-sm text-black/30 ${poppins.className} mb-4 text-center font-medium`}>
                   Please enter your student number before to proceed.
                 </p>
                 <Input
@@ -198,33 +199,33 @@ export default function StartTransaction(props: {
               </>
             ) : (
               <>
-                <div className="mb-2 flex justify-center">
+                <div className="mb-2 flex justify-center select-none">
                   <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
                     <ShieldCheck className="h-6 w-6 text-blue-500" />
                   </div>
                 </div>
                 <DialogTitle
                   as="h3"
-                  className={`text-center text-2xl font-medium text-black/75 ${poppins.className} font-semibold `}
+                  className={`select-none text-center text-2xl font-medium text-black/75 ${poppins.className} font-semibold `}
                 >
                   Identity Verification
                 </DialogTitle>
-                <p className={`mt-1 text-sm text-black/30 ${poppins.className} mb-1 text-center font-medium`}>
+                <p className={`select-none mt-1 text-sm text-black/30 ${poppins.className} mb-1 text-center font-medium`}>
                   For your security, please verify your identity.
                 </p>
-                <p className={`text-xs text-black/40 ${poppins.className} mb-5 text-center`}>
+                <p className={`select-none text-xs text-black/40 ${poppins.className} mb-5 text-center`}>
                   Student No: <span className="font-semibold uppercase text-black/60">{studentNumber}</span>
                 </p>
 
                 <div className="flex gap-3">
                   <div className="flex-1">
-                    <label className={`mb-1 block text-xs font-medium text-black/40 ${poppins.className}`}>
+                    <label className={`select-none mb-1 block text-xs font-medium text-black/40 ${poppins.className}`}>
                       Birth Month *
                     </label>
                     <select
                       value={birthMonth}
                       onChange={(e) => setBirthMonth(Number(e.target.value))}
-                      className={`h-14 w-full rounded-xl bg-blue-100 px-4 text-center text-black focus:outline-none ${poppins.className} text-lg font-semibold`}
+                      className={`select-text h-14 w-full rounded-xl bg-blue-100 px-4 text-center text-black focus:outline-none ${poppins.className} text-lg font-semibold`}
                     >
                       <option value={0} disabled>Select Month</option>
                       {MONTHS.map((m) => (
@@ -233,13 +234,13 @@ export default function StartTransaction(props: {
                     </select>
                   </div>
                   <div className="flex-1">
-                    <label className={`mb-1 block text-xs font-medium text-black/40 ${poppins.className}`}>
+                    <label className={`select-none mb-1 block text-xs font-medium text-black/40 ${poppins.className}`}>
                       Birth Year *
                     </label>
                     <select
                       value={birthYear}
                       onChange={(e) => setBirthYear(Number(e.target.value))}
-                      className={`h-14 w-full rounded-xl bg-blue-100 px-4 text-center text-black focus:outline-none ${poppins.className} text-lg font-semibold`}
+                      className={`select-text h-14 w-full rounded-xl bg-blue-100 px-4 text-center text-black focus:outline-none ${poppins.className} text-lg font-semibold`}
                     >
                       <option value={0} disabled>Select Year</option>
                       {YEARS.map((y) => (
