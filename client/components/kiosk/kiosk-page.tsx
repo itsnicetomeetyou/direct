@@ -21,10 +21,10 @@ export default function KioskPage() {
     startTransaction: false
   });
   return (
-    <>
+    <div className="select-none">
       <header className="flex h-[10vh] items-center justify-between">
         <div className="flex flex-row items-center">
-          <Image src="/images/direct_logo.png" height={80} width={80} alt="DiReCT's Logo" />
+          <Image src="/images/direct_logo.png" height={80} width={80} alt="DiReCT's Logo" draggable={false} />
           <p className={`ml-3 ${poppins.className} text-3xl font-bold`}>DiReCT+</p>
         </div>
         <div className="text-sm">
@@ -51,6 +51,7 @@ export default function KioskPage() {
             alt={"Calendar Image's"}
             loading="lazy"
             sizes="auto"
+            draggable={false}
           />
         </div>
 
@@ -63,6 +64,7 @@ export default function KioskPage() {
               alt="Document Style's"
               loading="lazy"
               sizes="auto"
+              draggable={false}
             />
             <span
               className={`absolute left-[10%] top-[25%]  font-semibold ${poppins.className}  w-[80%] text-blue-500`}
@@ -82,6 +84,7 @@ export default function KioskPage() {
               alt="Document Style's"
               loading="lazy"
               sizes="auto"
+              draggable={false}
             />
             <span className={`absolute left-[5%] top-[25%]  font-semibold ${poppins.className}  w-[90%] text-blue-500`}>
               <p className="text-left text-4xl">Start Transaction</p>
@@ -92,6 +95,6 @@ export default function KioskPage() {
           <StartTransaction modal={modal} setModal={setModal} />
         </div>
       </main>
-    </>
+    </div>
   );
 }
