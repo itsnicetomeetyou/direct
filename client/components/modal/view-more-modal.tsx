@@ -199,7 +199,7 @@ export default function ViewMoreModal(data: {
 
   return (
     <Dialog open={data.isOpen} onOpenChange={data.onClose}>
-      <DialogContent className="sm:max-w-2xl">
+      <DialogContent className={data.mode === 'VIEW' ? 'sm:max-w-2xl select-none' : 'sm:max-w-2xl'}>
         <DialogHeader>
           <DialogTitle>Request Document Information</DialogTitle>
           <DialogDescription>View more information about the document request</DialogDescription>

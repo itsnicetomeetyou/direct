@@ -144,7 +144,7 @@ export default function StartTransaction(props: {
         className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity data-[closed]:opacity-0 data-[enter]:duration-300 data-[leave]:duration-200 data-[enter]:ease-out data-[leave]:ease-in"
       />
 
-      <div className="fixed inset-0 z-10 w-screen overflow-y-auto ">
+      <div className="fixed inset-0 z-10 w-screen overflow-y-auto select-none">
         <div className="flex min-h-full items-end justify-center p-4 sm:items-center sm:p-0 ">
           <DialogPanel
             transition
@@ -170,7 +170,7 @@ export default function StartTransaction(props: {
                   value={studentNumber}
                   onChange={(e) => setStudentNumber(e.target.value)}
                   onKeyDown={(e) => { if (e.key === 'Enter') onSubmitStudentNumber(); }}
-                  className={`h-14 w-full rounded-xl bg-blue-100 text-center text-black focus:outline-1 data-[focus]:bg-blue-100 ${poppins.className} caret text-2xl font-semibold uppercase caret-blue-500 focus:outline-none`}
+                  className={`h-14 w-full select-text rounded-xl bg-blue-100 text-center text-black focus:outline-1 data-[focus]:bg-blue-100 ${poppins.className} caret text-2xl font-semibold uppercase caret-blue-500 focus:outline-none`}
                 />
                 <div className="mt-4 flex justify-end gap-2">
                   <Button

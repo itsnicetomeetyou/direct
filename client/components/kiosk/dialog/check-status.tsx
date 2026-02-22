@@ -93,7 +93,7 @@ export default function CheckStatus(props: {
         />
       )}
 
-      <div className="fixed inset-0 z-10 w-screen overflow-y-auto ">
+      <div className="fixed inset-0 z-10 w-screen overflow-y-auto select-none">
         <div className="flex min-h-full items-end justify-center p-4 sm:items-center sm:p-0 ">
           <DialogPanel
             transition
@@ -114,7 +114,7 @@ export default function CheckStatus(props: {
               name="referenceNumber"
               type="text"
               autoComplete="off"
-              className={`h-14 w-full rounded-xl bg-blue-100 text-center text-black focus:outline-1 data-[focus]:bg-blue-100 ${poppins.className} caret text-2xl font-semibold uppercase caret-blue-500 focus:outline-none`}
+              className={`h-14 w-full select-text rounded-xl bg-blue-100 text-center text-black focus:outline-1 data-[focus]:bg-blue-100 ${poppins.className} caret text-2xl font-semibold uppercase caret-blue-500 focus:outline-none`}
               onChange={(e) => setReferenceNumber(e.target.value)}
             />
             <div className="mt-4 flex justify-end gap-2">
