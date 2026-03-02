@@ -5,7 +5,6 @@ import '@uploadthing/react/styles.css';
 import type { Metadata } from 'next';
 import NextTopLoader from 'nextjs-toploader';
 import { Inter } from 'next/font/google';
-import { auth } from '@/auth';
 import StoreProvider from './store-provider';
 import './globals.css';
 
@@ -22,13 +21,17 @@ export const metadata: Metadata = {
   ]
 };
 
-export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  let session = null;
+async function getSessionSafe() {
   try {
-    session = await auth();
-  } catch (err) {
-    console.error('[RootLayout] auth failed:', err);
+    const { auth } = await import('@/auth');
+    return await auth().catch(() => null);
+  } catch {
+    return null;
   }
+}
+
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const session = await getSessionSafe();
   return (
     <html lang="en" suppressHydrationWarning={true}>
       <body className={`${inter.className} overflow-hidden `} suppressHydrationWarning={true}>

@@ -97,13 +97,31 @@ async function generateReferenceNumber() {
   return referenceNumber[0];
 }
 
+const USER_INFO_SELECT = {
+  id: true,
+  firstName: true,
+  middleName: true,
+  lastName: true,
+  studentNo: true,
+  specialOrder: true,
+  lrn: true,
+  address: true,
+  userId: true,
+  createdAt: true,
+  updatedAt: true,
+  phoneNo: true,
+  birthDate: true,
+} as const;
+
 export async function fetchStudentNumber(studentNo: string) {
+  const trimmed = studentNo?.trim() ?? '';
+  if (!trimmed) throw new Error('Student number is required.');
+
   const studentNumber = await prisma.userInformation.findFirst({
     where: {
-      studentNo: {
-        equals: studentNo
-      }
-    }
+      studentNo: { equals: trimmed },
+    },
+    select: USER_INFO_SELECT,
   });
   if (!studentNumber) throw new Error('Student Number Not Found');
   return studentNumber;
@@ -115,8 +133,9 @@ export async function verifyStudentBirthDate(
   birthYear: number
 ): Promise<{ verified: boolean; error?: string }> {
   try {
+    const trimmed = studentNo?.trim() ?? '';
     const student = await prisma.userInformation.findFirst({
-      where: { studentNo: { equals: studentNo } },
+      where: { studentNo: { equals: trimmed } },
       select: { birthDate: true, firstName: true },
     });
 
@@ -160,15 +179,16 @@ export async function fetchOrderDocument(data: IOrderDocument): Promise<Document
   try {
     // Generate a unique reference number
     const referenceNumber = await generateReferenceNumber();
-    // Find the user using student no.
+    // Find the user using student no. (explicit select for DB compatibility)
     const findUser = await prisma.userInformation.findFirst({
       where: {
         studentNo: {
-          equals: data.studentNo
+          equals: data.studentNo.trim()
         }
       },
-      include: {
-        users: true
+      select: {
+        ...USER_INFO_SELECT,
+        users: { select: { id: true, email: true } }
       }
     });
 

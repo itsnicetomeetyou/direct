@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,7 @@ import { Eye, EyeOff, Loader2, ShieldCheck } from 'lucide-react';
 import { mobileResetPassword } from '@/server/mobile-auth';
 import { useToast } from '@/components/ui/use-toast';
 
-export default function MobileResetPasswordPage() {
+function MobileResetPasswordContent() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -134,5 +134,13 @@ export default function MobileResetPasswordPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function MobileResetPasswordPage() {
+  return (
+    <Suspense fallback={<div className="flex h-full items-center justify-center bg-gradient-to-br from-[#E900C4] to-[#007AEB]"><Loader2 className="h-8 w-8 animate-spin text-white" /></div>}>
+      <MobileResetPasswordContent />
+    </Suspense>
   );
 }

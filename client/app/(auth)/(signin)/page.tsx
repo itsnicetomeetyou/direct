@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { SignInViewPage } from '@/sections/auth/view';
 import { prisma } from '@/server/prisma';
 import { Metadata } from 'next';
@@ -24,5 +25,9 @@ export const metadata: Metadata = {
 })();
 
 export default function Page() {
-  return <SignInViewPage />;
+  return (
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-zinc-950"><div className="h-8 w-8 animate-spin rounded-full border-2 border-white border-t-transparent" /></div>}>
+      <SignInViewPage />
+    </Suspense>
+  );
 }

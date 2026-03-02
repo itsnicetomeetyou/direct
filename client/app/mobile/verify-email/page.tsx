@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { Suspense, useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,7 +8,7 @@ import { Loader2 } from 'lucide-react';
 import { mobileSendOtp, mobileVerifyOtp } from '@/server/mobile-auth';
 import { useToast } from '@/components/ui/use-toast';
 
-export default function MobileVerifyEmailPage() {
+function MobileVerifyEmailContent() {
   const [otp, setOtp] = useState(['', '', '', '']);
   const [otpToken, setOtpToken] = useState('');
   const [loading, setLoading] = useState(false);
@@ -130,5 +130,13 @@ export default function MobileVerifyEmailPage() {
         </button>
       </div>
     </div>
+  );
+}
+
+export default function MobileVerifyEmailPage() {
+  return (
+    <Suspense fallback={<div className="flex h-full items-center justify-center bg-gradient-to-br from-[#E900C4] to-[#007AEB]"><Loader2 className="h-8 w-8 animate-spin text-white" /></div>}>
+      <MobileVerifyEmailContent />
+    </Suspense>
   );
 }
