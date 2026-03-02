@@ -363,13 +363,18 @@ export async function mobileSaveUserInfo(data: {
         ...rest,
         birthDate: birthDate ? new Date(birthDate) : null,
         userId: session.id,
-        // collegeDepartment and course omitted until DB has columns (run migration to add them, then persist here)
+        ...(collegeDepartment != null && collegeDepartment !== '' && { collegeDepartment }),
+        ...(course != null && course !== '' && { course }),
       },
     });
 
     return { success: true };
   } catch (err) {
     console.error('[mobileSaveUserInfo]', err);
+    const message = err instanceof Error ? err.message : '';
+    if (message.includes('Unknown column') || message.includes('collegeDepartment') || message.includes('course')) {
+      return { error: 'Database update required. Please contact support or try again later.' };
+    }
     return { error: 'Failed to save information. Please try again.' };
   }
 }

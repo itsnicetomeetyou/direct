@@ -107,16 +107,17 @@ export default function MobileRegisterInfoPage() {
     setLoading(true);
     try {
       const result = await mobileSaveUserInfo(form);
-      if (result.error) {
+      if (result?.error) {
         toast({ variant: 'destructive', title: 'Error', description: result.error });
         return;
       }
-      if (result.success) {
+      if (result?.success) {
         toast({ title: 'Success', description: 'Profile completed.' });
         router.push('/mobile/dashboard/home');
       }
-    } catch {
-      toast({ variant: 'destructive', title: 'Error', description: 'Failed to save info.' });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Failed to save info.';
+      toast({ variant: 'destructive', title: 'Error', description: msg });
     } finally {
       setLoading(false);
     }
