@@ -326,6 +326,8 @@ export async function mobileSaveUserInfo(data: {
   address: string;
   phoneNo: string;
   birthDate?: string;
+  collegeDepartment?: string;
+  course?: string;
 }) {
   try {
     const session = await getMobileSession();

@@ -21,20 +21,22 @@ model Users {
 }
 
 model UserInformation {
-  id           String   @id @default(uuid()) @db.VarChar(36)
-  firstName    String
-  middleName   String?
-  lastName     String
-  studentNo    String
-  specialOrder String?
-  lrn          String?
-  address      String   @db.Text
-  userId       String   @unique @db.VarChar(36)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  phoneNo      String
-  birthDate    DateTime?
-  users        Users    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                String   @id @default(uuid()) @db.VarChar(36)
+  firstName         String
+  middleName        String?
+  lastName          String
+  studentNo         String
+  specialOrder      String?
+  lrn               String?
+  address           String   @db.Text
+  userId            String   @unique @db.VarChar(36)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  phoneNo           String
+  birthDate         DateTime?
+  collegeDepartment String?  @db.VarChar(255)
+  course            String?  @db.VarChar(255)
+  users             Users    @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Documents {

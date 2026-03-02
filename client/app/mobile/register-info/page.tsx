@@ -4,11 +4,73 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Loader2, ChevronLeft, ChevronRight, Check } from 'lucide-react';
 import { mobileSaveUserInfo } from '@/server/mobile-auth';
 import { useToast } from '@/components/ui/use-toast';
 
 const steps = ['Personal Info', 'Academic Info', 'Review'];
+
+const COLLEGE_DEPARTMENTS: Record<string, string[]> = {
+  'College of Health Sciences': [
+    'Bachelor of Science in Medical Technology (BSMedTech)',
+    'Bachelor of Science in Nursing (BSN)',
+  ],
+  'International School of Hospitality & Tourism Management': [
+    'Bachelor of Science in Hospitality Management (BSHM)',
+    'Bachelor of Science in Tourism Management (BSTM)',
+  ],
+  'College of Teacher Education': [
+    'Bachelor in Early Childhood Education (BECEd)',
+    'Bachelor in Elementary Education (BSELEMEd)',
+    'Bachelor in Secondary Education, Major in Information Technology (BSEd-IT)',
+    'Bachelor in Secondary Education, Major in English (BSEd-Eng)',
+    'Bachelor in Secondary Education, Major in Filipino (BSEd-Fil)',
+    'Bachelor in Secondary Education, Major in Mathematics (BSEd-Math)',
+    'Bachelor in Secondary Education, Major in Science (BSEd-Sci)',
+    'Bachelor in Technical Vocational Teacher Education (BTVTEd), Major in Computer Programming',
+    'Bachelor in Technical Vocational Teacher Education (BTVTEd), Major in Home Economics & Livelihood Education',
+  ],
+  'College of Engineering & Digital Technology': [
+    'Bachelor of Science in Computer Engineering (BSCoE)',
+    'Bachelor of Science in Electronics Engineering (BSElE)',
+  ],
+  'College of Arts & Sciences': [
+    'Bachelor of Arts in Communication (ABComm / Masscom)',
+    'Bachelor of Arts in English (AB English)',
+    'Bachelor of Science in Mathematics (BSMath)',
+    'Bachelor of Science in Psychology (BSP)',
+  ],
+  'College of Computer Studies': [
+    'Associate in Computer Technology (ACT)',
+    'Bachelor of Science in Computer Science (BSCS)',
+    'Bachelor of Science in Information Technology (BSIT)',
+    'Bachelor of Science in Information System (BSIS)',
+  ],
+  'College of Business & Accountancy': [
+    'Associate in Business Administration',
+    'Bachelor of Science in Accounting Information System (BSAIS)',
+    'Bachelor of Science in Accountancy (BSA)',
+    'Bachelor of Science in Management Accounting',
+    'Bachelor of Science in Real Estate Management (BS REM)',
+    'Bachelor of Science in Internal Auditing (BSIA)',
+    'Bachelor of Science in Legal Management (BSLM)',
+    'Bachelor of Science in Business Administration, Major in Financial Management (BSBA - FM)',
+    'Bachelor of Science in Business Administration, Major in Operations Management (BSBA - OM)',
+    'Bachelor of Science in Business Administration, Major in Human Resources Management (BSBA - HR)',
+  ],
+  'College of Criminology & Administration': [
+    'Bachelor of Science in Criminology (BSCrim)',
+    'Bachelor of Science in Industrial Security Management (BSISM)',
+    'Bachelor in Public Administration (BPA)',
+  ],
+};
 
 export default function MobileRegisterInfoPage() {
   const [step, setStep] = useState(0);
@@ -22,6 +84,8 @@ export default function MobileRegisterInfoPage() {
     birthDate: '',
     studentNo: '',
     specialOrder: '',
+    collegeDepartment: '',
+    course: '',
   });
   const router = useRouter();
   const { toast } = useToast();
@@ -31,9 +95,13 @@ export default function MobileRegisterInfoPage() {
 
   const canGoNext = () => {
     if (step === 0) return form.firstName && form.lastName && form.phoneNo && form.address && form.birthDate;
-    if (step === 1) return form.studentNo;
+    if (step === 1) return form.studentNo && form.collegeDepartment && form.course;
     return true;
   };
+
+  const coursesForDepartment = form.collegeDepartment
+    ? COLLEGE_DEPARTMENTS[form.collegeDepartment] ?? []
+    : [];
 
   const handleSubmit = async () => {
     setLoading(true);
@@ -94,6 +162,46 @@ export default function MobileRegisterInfoPage() {
           <div className="space-y-3">
             <Input placeholder="Student Number *" value={form.studentNo} onChange={(e) => update('studentNo', e.target.value)} className="h-11 rounded-lg bg-muted/50" required />
             <div>
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">College Department *</label>
+              <Select
+                value={form.collegeDepartment}
+                onValueChange={(val) => {
+                  update('collegeDepartment', val);
+                  update('course', '');
+                }}
+              >
+                <SelectTrigger className="h-11 rounded-lg bg-muted/50">
+                  <SelectValue placeholder="Select department" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.keys(COLLEGE_DEPARTMENTS).map((dept) => (
+                    <SelectItem key={dept} value={dept}>
+                      {dept}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">Course *</label>
+              <Select
+                value={form.course}
+                onValueChange={(val) => update('course', val)}
+                disabled={!form.collegeDepartment}
+              >
+                <SelectTrigger className="h-11 rounded-lg bg-muted/50">
+                  <SelectValue placeholder={form.collegeDepartment ? 'Select course' : 'Select department first'} />
+                </SelectTrigger>
+                <SelectContent>
+                  {coursesForDepartment.map((courseName) => (
+                    <SelectItem key={courseName} value={courseName}>
+                      {courseName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
               <label className="mb-1 block text-xs font-medium text-muted-foreground">Are you a graduate? *</label>
               <div className="flex gap-3">
                 <button
@@ -135,6 +243,8 @@ export default function MobileRegisterInfoPage() {
             <h3 className="pt-2 font-semibold text-muted-foreground">Academic</h3>
             <div className="rounded-lg bg-muted/50 p-3 space-y-1">
               <p><span className="text-muted-foreground">Student No:</span> {form.studentNo}</p>
+              <p><span className="text-muted-foreground">Department:</span> {form.collegeDepartment || '—'}</p>
+              <p><span className="text-muted-foreground">Course:</span> {form.course || '—'}</p>
               <p><span className="text-muted-foreground">Graduate:</span> {form.specialOrder === 'YES' ? 'Yes' : 'No'}</p>
             </div>
           </div>
