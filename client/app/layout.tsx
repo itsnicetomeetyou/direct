@@ -23,7 +23,12 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const session = await auth();
+  let session = null;
+  try {
+    session = await auth();
+  } catch (err) {
+    console.error('[RootLayout] auth failed:', err);
+  }
   return (
     <html lang="en" suppressHydrationWarning={true}>
       <body className={`${inter.className} overflow-hidden `} suppressHydrationWarning={true}>
