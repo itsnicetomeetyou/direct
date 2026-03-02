@@ -180,7 +180,22 @@ export async function deleteUser(userId: string) {
   const user = await prisma.users.findUnique({ where: { id: userId } });
   if (!user) throw new Error('User not found');
 
-  await prisma.users.delete({ where: { id: userId } });
+  await prisma.$transaction(async (tx) => {
+    const requests = await tx.requestDocuments.findMany({
+      where: { usersId: userId },
+      select: { id: true, documentPaymentId: true },
+    });
+    const paymentIds = requests.map((r) => r.documentPaymentId);
+
+    await tx.documentSelected.deleteMany({ where: { userId } });
+    await tx.requestDocuments.deleteMany({ where: { usersId: userId } });
+    if (paymentIds.length > 0) {
+      await tx.documentPayment.deleteMany({ where: { id: { in: paymentIds } } });
+    }
+    await tx.userInformation.deleteMany({ where: { userId } });
+    await tx.users.delete({ where: { id: userId } });
+  });
+
   revalidatePath('/dashboard/settings/user-management');
 }
 
