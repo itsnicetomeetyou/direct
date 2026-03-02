@@ -186,8 +186,24 @@ export async function recentSales() {
         include: {
           users: {
             include: {
-              UserInformation: true
-            }
+              UserInformation: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  middleName: true,
+                  lastName: true,
+                  studentNo: true,
+                  specialOrder: true,
+                  lrn: true,
+                  address: true,
+                  userId: true,
+                  createdAt: true,
+                  updatedAt: true,
+                  phoneNo: true,
+                  birthDate: true,
+                },
+              },
+            },
           }
         }
       }

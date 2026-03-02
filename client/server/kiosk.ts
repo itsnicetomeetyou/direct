@@ -430,8 +430,24 @@ export async function orderCheckStatus(referenceNo: string) {
         documentPayment: true,
         users: {
           include: {
-            UserInformation: true
-          }
+            UserInformation: {
+              select: {
+                id: true,
+                firstName: true,
+                middleName: true,
+                lastName: true,
+                studentNo: true,
+                specialOrder: true,
+                lrn: true,
+                address: true,
+                userId: true,
+                createdAt: true,
+                updatedAt: true,
+                phoneNo: true,
+                birthDate: true,
+              },
+            },
+          },
         },
         DocumentSelected: {
           include: {

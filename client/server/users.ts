@@ -36,7 +36,23 @@ export async function fetchUsers({ page, limit, search, role }: FetchUsersParams
     prisma.users.findMany({
       where,
       include: {
-        UserInformation: true
+        UserInformation: {
+          select: {
+            id: true,
+            firstName: true,
+            middleName: true,
+            lastName: true,
+            studentNo: true,
+            specialOrder: true,
+            lrn: true,
+            address: true,
+            userId: true,
+            createdAt: true,
+            updatedAt: true,
+            phoneNo: true,
+            birthDate: true,
+          },
+        },
       },
       orderBy: { createdAt: 'desc' },
       skip,
@@ -126,7 +142,8 @@ export async function updateUser(
   // Update or create UserInformation
   if (data.firstName || data.lastName || data.studentNo || data.phoneNo) {
     const existing = await prisma.userInformation.findUnique({
-      where: { userId }
+      where: { userId },
+      select: { id: true },
     });
     if (existing) {
       await prisma.userInformation.update({
