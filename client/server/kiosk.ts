@@ -145,7 +145,8 @@ export async function fetchAllDocuments(studentNo: string) {
         { eligibility: users.specialOrder ? 'GRADUATED' : 'STUDENT' },
         { eligibility: 'BOTH' }
       ]
-    }
+    },
+    orderBy: { name: 'asc' }
   });
 
   // Convert Decimal fields to numbers for serialization
