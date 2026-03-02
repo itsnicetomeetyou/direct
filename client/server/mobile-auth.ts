@@ -1,5 +1,6 @@
 'use server';
 
+import { randomUUID } from 'crypto';
 import { prisma } from './prisma';
 import { compare, hash } from 'bcryptjs';
 import { SignJWT, jwtVerify } from 'jose';
@@ -356,21 +357,37 @@ export async function mobileSaveUserInfo(data: {
     });
     if (existing) return { error: 'User information already exists.' };
 
-    const { birthDate, collegeDepartment, course, ...rest } = data;
+    const id = randomUUID();
+    const birthDateVal = data.birthDate ? new Date(data.birthDate) : null;
+    const studentNo = data.studentNo.trim();
+    const middleName = data.middleName?.trim() || null;
+    const specialOrder = data.specialOrder?.trim() || null;
 
-    await prisma.userInformation.create({
-      data: {
-        ...rest,
-        birthDate: birthDate ? new Date(birthDate) : null,
-        userId: session.id,
-        // Omit collegeDepartment/course until DB has columns (run ADD_COLLEGE_DEPARTMENT_AND_COURSE.sql)
-      },
-    });
+    await prisma.$executeRawUnsafe(
+      'INSERT INTO `UserInformation` (id, firstName, middleName, lastName, studentNo, specialOrder, lrn, address, userId, createdAt, updatedAt, phoneNo, birthDate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW(), ?, ?)',
+      id,
+      data.firstName,
+      middleName,
+      data.lastName,
+      studentNo,
+      specialOrder,
+      null,
+      data.address,
+      session.id,
+      data.phoneNo,
+      birthDateVal
+    );
 
     return { success: true };
   } catch (err) {
     console.error('[mobileSaveUserInfo]', err);
-    return { error: 'Failed to save information. Please try again.' };
+    const msg = err instanceof Error ? err.message : '';
+    return {
+      error:
+        msg.includes('Unique constraint') || msg.includes('Duplicate entry')
+          ? 'This student number is already registered.'
+          : 'Failed to save information. Please try again.',
+    };
   }
 }
 
