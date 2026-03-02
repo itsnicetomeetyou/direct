@@ -55,7 +55,23 @@ export async function getMobileSession() {
       email: true,
       emailVerified: true,
       role: true,
-      UserInformation: true,
+      UserInformation: {
+        select: {
+          id: true,
+          firstName: true,
+          middleName: true,
+          lastName: true,
+          studentNo: true,
+          specialOrder: true,
+          lrn: true,
+          address: true,
+          userId: true,
+          createdAt: true,
+          updatedAt: true,
+          phoneNo: true,
+          birthDate: true,
+        },
+      },
     },
   });
 
@@ -333,19 +349,21 @@ export async function mobileSaveUserInfo(data: {
     const session = await getMobileSession();
     if (!session) return { error: 'Not authenticated.' };
 
-    // Check if already exists
+    // Check if already exists (select only id to avoid requiring new columns on old DBs)
     const existing = await prisma.userInformation.findUnique({
       where: { userId: session.id },
+      select: { id: true },
     });
     if (existing) return { error: 'User information already exists.' };
 
-    const { birthDate, ...rest } = data;
+    const { birthDate, collegeDepartment, course, ...rest } = data;
 
     await prisma.userInformation.create({
       data: {
         ...rest,
         birthDate: birthDate ? new Date(birthDate) : null,
         userId: session.id,
+        // collegeDepartment and course omitted until DB has columns (run migration to add them, then persist here)
       },
     });
 
@@ -483,7 +501,23 @@ export async function mobileGetProfile() {
         role: true,
         emailVerified: true,
         createdAt: true,
-        UserInformation: true,
+        UserInformation: {
+          select: {
+            id: true,
+            firstName: true,
+            middleName: true,
+            lastName: true,
+            studentNo: true,
+            specialOrder: true,
+            lrn: true,
+            address: true,
+            userId: true,
+            createdAt: true,
+            updatedAt: true,
+            phoneNo: true,
+            birthDate: true,
+          },
+        },
       },
     });
   } catch (err) {
