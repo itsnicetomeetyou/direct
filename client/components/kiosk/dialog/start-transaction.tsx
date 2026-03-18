@@ -50,10 +50,11 @@ export default function StartTransaction(props: {
   };
 
   async function onSubmitStudentNumber() {
-    if (!studentNumber.trim()) return;
+    const trimmed = studentNumber.trim();
+    if (!trimmed) return;
     try {
       setIsLoading(true);
-      const response = await fetchStudentNumber(studentNumber);
+      const response = await fetchStudentNumber(trimmed);
       if (response.id) {
         setIsLoading(false);
         setStep('verify');
@@ -71,17 +72,16 @@ export default function StartTransaction(props: {
       });
     } catch (err) {
       setIsLoading(false);
-      if (err instanceof Error) {
-        return Swal.fire({
-          icon: 'error',
-          title: 'Oops...',
-          text: err.message,
-          customClass: {
-            container: `${poppins.className}`,
-            confirmButton: ` bg-red-500 text-white hover:bg-red-600 w-[100px] ${poppins.className} rounded-lg p-3 font-normal`
-          }
-        });
-      }
+      const message = err instanceof Error ? err.message : 'Something went wrong. Please try again later.';
+      return Swal.fire({
+        icon: 'error',
+        title: 'Oops...',
+        text: message,
+        customClass: {
+          container: `${poppins.className}`,
+          confirmButton: ` bg-red-500 text-white hover:bg-red-600 w-[100px] ${poppins.className} rounded-lg p-3 font-normal`
+        }
+      });
     }
   }
 
