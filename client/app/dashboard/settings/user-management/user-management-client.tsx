@@ -80,6 +80,7 @@ export default function UserManagementClient({
   const searchParams = useSearchParams();
 
   const [search, setSearch] = useState(searchParams.get('q') || '');
+  const [roleFilter, setRoleFilter] = useState(searchParams.get('role') || 'ALL');
   const [addOpen, setAddOpen] = useState(false);
   const [resetOpen, setResetOpen] = useState(false);
   const [resetUserId, setResetUserId] = useState('');
@@ -104,6 +105,16 @@ export default function UserManagementClient({
   const handleSearch = () => {
     const params = new URLSearchParams();
     if (search) params.set('q', search);
+    if (roleFilter && roleFilter !== 'ALL') params.set('role', roleFilter);
+    params.set('page', '1');
+    router.push(`/dashboard/settings/user-management?${params.toString()}`);
+  };
+
+  const handleRoleFilter = (role: string) => {
+    setRoleFilter(role);
+    const params = new URLSearchParams(searchParams.toString());
+    if (role && role !== 'ALL') params.set('role', role);
+    else params.delete('role');
     params.set('page', '1');
     router.push(`/dashboard/settings/user-management?${params.toString()}`);
   };
@@ -197,6 +208,19 @@ export default function UserManagementClient({
           <Button variant="outline" size="icon" onClick={handleSearch}>
             <Search className="h-4 w-4" />
           </Button>
+          <Select value={roleFilter} onValueChange={handleRoleFilter}>
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="All Roles" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">All Roles</SelectItem>
+              {availableRoles.map((r) => (
+                <SelectItem key={r} value={r}>
+                  {r}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         <Dialog open={addOpen} onOpenChange={setAddOpen}>
           <DialogTrigger asChild>
