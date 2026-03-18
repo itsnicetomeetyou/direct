@@ -19,7 +19,7 @@ export async function fetchDocuments({ page, limit, search }: FetchDocumentsPara
     where: {
       ...(search && { name: { contains: search } })
     },
-    orderBy: { createdAt: 'desc' },
+    orderBy: { name: 'asc' },
     skip,
     take: limit
   });
