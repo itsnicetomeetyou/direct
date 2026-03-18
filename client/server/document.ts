@@ -116,52 +116,71 @@ export async function deleteDocument(documentId: string) {
 
 export async function fetchDocumentRequest({ page, limit, search, status }: FetchDocumentsParams) {
   const skip = (page - 1) * limit;
-  const documentsRequest = await prisma.requestDocuments.findMany({
-    where: {
-      ...(search && {
-        OR: [
-          { users: { UserInformation: { firstName: { contains: search } } } },
-          { users: { UserInformation: { lastName: { contains: search } } } }
-        ]
-      }),
-      ...(status && {
-        status: {
-          in: status.split('.').map((s) => RequestDocumentsStatus[s as keyof typeof RequestDocumentsStatus])
-        }
-      })
-    },
-    include: {
-      documentPayment: true,
-      users: {
-        include: {
-          UserInformation: {
-            select: {
-              id: true,
-              firstName: true,
-              middleName: true,
-              lastName: true,
-              studentNo: true,
-              specialOrder: true,
-              lrn: true,
-              address: true,
-              userId: true,
-              createdAt: true,
-              updatedAt: true,
-              phoneNo: true,
-              birthDate: true,
-            },
-          },
-        },
-      },
-      DocumentSelected: {
-        include: {
-          document: true
-        }
+  const whereClause: Prisma.RequestDocumentsWhereInput = {
+    ...(search && {
+      OR: [
+        { users: { UserInformation: { firstName: { contains: search } } } },
+        { users: { UserInformation: { lastName: { contains: search } } } }
+      ]
+    }),
+    ...(status && {
+      status: {
+        in: status.split('.').map((s) => RequestDocumentsStatus[s as keyof typeof RequestDocumentsStatus])
       }
-    },
-    orderBy: { createdAt: 'desc' },
-    skip,
-    take: limit
+    })
+  };
+
+  const USER_INFO_SELECT_BASE = {
+    id: true,
+    firstName: true,
+    middleName: true,
+    lastName: true,
+    studentNo: true,
+    specialOrder: true,
+    lrn: true,
+    address: true,
+    userId: true,
+    createdAt: true,
+    updatedAt: true,
+    phoneNo: true,
+    birthDate: true
+  } as const;
+
+  const USER_INFO_SELECT_WITH_ACADEMIC = {
+    ...USER_INFO_SELECT_BASE,
+    collegeDepartment: true,
+    course: true
+  } as const;
+
+  async function fetchRequests(includeAcademic: boolean) {
+    return prisma.requestDocuments.findMany({
+      where: whereClause,
+      include: {
+        documentPayment: true,
+        users: {
+          include: {
+            UserInformation: {
+              select: includeAcademic ? USER_INFO_SELECT_WITH_ACADEMIC : USER_INFO_SELECT_BASE
+            }
+          }
+        },
+        DocumentSelected: {
+          include: { document: true }
+        }
+      },
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take: limit
+    });
+  }
+
+  let documentsRequest = await fetchRequests(true).catch(async (err) => {
+    const message = err instanceof Error ? err.message : String(err);
+    // Backward-compatible fallback for production DBs that haven't been migrated yet.
+    if (/Unknown column/i.test(message) && /(collegeDepartment|course)/i.test(message)) {
+      return fetchRequests(false);
+    }
+    throw err;
   });
 
   documentsRequest.map(async (column) => {
