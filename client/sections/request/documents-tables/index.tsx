@@ -34,14 +34,14 @@ export default function RequestTable({ data, totalData }: { data: Array<TDocumen
         status: statusFilter || null
       });
 
+      /** Columns match admin needs; dept/course from student profile (mobile registration). */
       const header = [
-        'Order ID',
         'Reference Number',
         'Request Date',
         'Appointment Date',
         'Status',
         'Delivery Option',
-        'Student No',
+        'Student Number',
         'Student Name',
         'College Department',
         'Course',
@@ -51,7 +51,6 @@ export default function RequestTable({ data, totalData }: { data: Array<TDocumen
 
       const csvRows = rows.map((order) =>
         [
-          order.id,
           order.referenceNumber,
           order.createdAt ? moment(order.createdAt).format('YYYY-MM-DD HH:mm:ss') : '',
           order.selectedSchedule ? moment(order.selectedSchedule).format('YYYY-MM-DD') : '',

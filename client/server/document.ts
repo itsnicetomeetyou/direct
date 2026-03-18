@@ -220,8 +220,8 @@ export async function fetchDocumentRequest({ page, limit, search, status }: Fetc
 
 const MAX_CSV_EXPORT_ROWS = 50_000;
 
+/** Order list CSV row — collegeDepartment & course from UserInformation (mobile register-info). */
 export type CsvOrderRow = {
-  id: string;
   referenceNumber: string;
   createdAt: string;
   selectedSchedule: string;
@@ -232,7 +232,7 @@ export type CsvOrderRow = {
   collegeDepartment: string;
   course: string;
   documents: string;
-  totalAmount: number | '';
+  totalAmount: string;
 };
 
 /** All orders matching filters (up to MAX_CSV_EXPORT_ROWS) for CSV download — not paginated. */
@@ -319,11 +319,10 @@ export async function exportDocumentRequestsForCsv(params: {
       .join('; ');
     const total =
       order.documentPayment?.totalAmount !== null && order.documentPayment?.totalAmount !== undefined
-        ? Number(order.documentPayment.totalAmount)
-        : ('' as const);
+        ? Number(order.documentPayment.totalAmount).toFixed(2)
+        : '';
 
     return {
-      id: order.id,
       referenceNumber: order.documentPayment?.referenceNumber ?? '',
       createdAt: order.createdAt.toISOString(),
       selectedSchedule: order.selectedSchedule ? order.selectedSchedule.toISOString() : '',
