@@ -21,6 +21,15 @@ export default function CheckStatus(props: {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [viewTransactionModal, setViewTransactionModal] = useState<boolean>(false);
   const [referenceNumber, setReferenceNumber] = useState<string>('');
+
+  const closeToHome = () => {
+    setIsLoading(false);
+    setViewTransactionModal(false);
+    setData(null);
+    setReferenceNumber('');
+    props.setModal((prev) => ({ ...prev, checkStatus: false }));
+  };
+
   const onClickConfirm = async () => {
     try {
       setIsLoading(true);
@@ -74,8 +83,7 @@ export default function CheckStatus(props: {
     <Dialog
       open={props.modal.checkStatus}
       onClose={() => {
-        setReferenceNumber('');
-        props.setModal((prev) => ({ ...prev, checkStatus: false }));
+        closeToHome();
       }}
       className="relative z-10 "
     >
@@ -88,7 +96,7 @@ export default function CheckStatus(props: {
         <ViewMoreModal
           isOpen={viewTransactionModal}
           data={data}
-          onClose={() => setViewTransactionModal(false)}
+          onClose={closeToHome}
           mode="VIEW"
         />
       )}
@@ -122,8 +130,7 @@ export default function CheckStatus(props: {
               <Button
                 className={`inline-flex items-center gap-2 rounded-md bg-gray-100 px-5 py-2 text-sm/6 font-medium text-black shadow-inner shadow-white/10 focus:outline-none data-[hover]:bg-gray-200 data-[open]:bg-gray-700 data-[focus]:outline-1 data-[focus]:outline-white ${poppins.className} font-semibold`}
                 onClick={() => {
-                  setReferenceNumber('');
-                  props.setModal((prev) => ({ ...prev, checkStatus: false }));
+                  closeToHome();
                 }}
                 type="button"
               >
