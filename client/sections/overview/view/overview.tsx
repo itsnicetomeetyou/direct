@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getStatistics, recentSales } from '@/server/statistics';
 import { formatCurrency } from '@/lib/utils';
 import { IRecentSales } from '@/types';
+import { DashboardDownloadCsv } from '../dashboard-download-csv';
 
 export default async function OverViewPage() {
   const getStats = await getStatistics();
@@ -14,8 +15,9 @@ export default async function OverViewPage() {
   return (
     <PageContainer scrollable>
       <div className="space-y-2">
-        <div className="flex items-center justify-between space-y-2">
+        <div className="flex flex-wrap items-center justify-between gap-3 space-y-2">
           <h2 className="text-2xl font-bold tracking-tight">Hi, Welcome back 👋</h2>
+          <DashboardDownloadCsv />
         </div>
         <Tabs defaultValue="overview" className="space-y-4">
           <TabsList>
@@ -127,8 +129,9 @@ export default async function OverViewPage() {
               <div className="col-span-4">
                 <BarGraph
                   chartData={getStats?.totalDocumentRequested?.dailyRequestData || []}
-                  documentTypes={getStats?.totalDocumentRequested?.allDocumentTypes || []}
-                  transactions={getStats?.totalDocumentRequested?.allTransactions || []}
+                  transactionListDocuments={
+                    getStats?.totalDocumentRequested?.transactionListDocuments || []
+                  }
                 />
               </div>
               <Card className="col-span-4 md:col-span-3">

@@ -54,13 +54,10 @@ async function totalDocumentRequested() {
       { date: string; status: string; documentType: string; transactionRef: string; totalRequests: number }
     > = {};
 
-    const transactionSet = new Set<string>();
-
     totalRequested.forEach((doc) => {
       const date = doc.createdAt.toISOString().split('T')[0];
       const status = doc.status ?? 'PENDING';
       const transactionRef = doc.documentPayment?.referenceNumber ?? doc.id;
-      transactionSet.add(transactionRef);
       const docNames = doc.DocumentSelected.map((ds) => ds.document.name);
       const uniqueNames = docNames.length > 0 ? Array.from(new Set(docNames)) : ['Unknown'];
 
@@ -76,7 +73,14 @@ async function totalDocumentRequested() {
     const dailyRequestData = Object.values(dailyRequestMap);
 
     const allDocumentTypes = Array.from(new Set(dailyRequestData.map((d) => d.documentType))).sort();
-    const allTransactions = Array.from(transactionSet).sort();
+
+    /** Every document on Transaction List (/dashboard/documents) — used for chart filter dropdown */
+    const transactionListDocuments = (
+      await prisma.documents.findMany({
+        select: { name: true },
+        orderBy: { name: 'asc' }
+      })
+    ).map((d) => d.name);
 
     const dailyTotalsMap: Record<string, number> = {};
     dailyRequestData.forEach(({ date, totalRequests }) => {
@@ -97,7 +101,7 @@ async function totalDocumentRequested() {
     return {
       dailyRequestData,
       allDocumentTypes,
-      allTransactions,
+      transactionListDocuments,
       percentageChangeFromLastData,
       totalRequested: totalRequested.length
     };
@@ -181,6 +185,113 @@ async function totalRevenue() {
     if (err instanceof Error) {
       throw new Error(err.message);
     }
+  }
+}
+
+function csvCell(v: unknown): string {
+  const s = v === null || v === undefined ? '' : String(v);
+  if (/[",\r\n]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+  return s;
+}
+
+/** Dashboard overview + daily stats + recent paid sales for CSV download */
+export async function exportDashboardCsv(): Promise<{ content: string; error?: string }> {
+  try {
+    const stats = await getStatistics();
+    if (!stats) return { content: '', error: 'Could not load statistics.' };
+
+    const recentPaid = await prisma.documentPayment.findMany({
+      where: { status: 'PAID' },
+      orderBy: { createdAt: 'desc' },
+      take: 500,
+      include: {
+        RequestDocuments: {
+          include: {
+            users: {
+              include: {
+                UserInformation: {
+                  select: {
+                    firstName: true,
+                    middleName: true,
+                    lastName: true,
+                    studentNo: true
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    });
+
+    const row = (...cells: unknown[]) => cells.map(csvCell).join(',');
+    const lines: string[] = [];
+
+    const dailyReq = stats.totalDocumentRequested?.dailyRequestData ?? [];
+    const byDate: Record<string, number> = {};
+    dailyReq.forEach((d) => {
+      byDate[d.date] = (byDate[d.date] || 0) + d.totalRequests;
+    });
+    const sortedRequestDates = Object.keys(byDate).sort();
+
+    lines.push(row('DiReCT Dashboard Report'));
+    lines.push(row('Generated (UTC)', new Date().toISOString()));
+    lines.push('');
+    lines.push(row('Summary'));
+    lines.push(row('Metric', 'Value'));
+    lines.push(row('Total revenue (PHP)', Number(stats.totalRevenue?.totalSelectedPrice ?? 0).toFixed(2)));
+    lines.push(
+      row(
+        'Revenue % change (last vs previous day with sales)',
+        Number(stats.totalRevenue?.percentageChangeFromLastData ?? 0).toFixed(2)
+      )
+    );
+    lines.push(row('Total users', Number(stats.totalUsers ?? 0)));
+    lines.push(row('Total paid document orders (status PAID)', Number(stats.totalDocumentPaidRequested ?? 0)));
+    lines.push(row('Total document requests (orders)', Number(stats.totalDocumentRequested?.totalRequested ?? 0)));
+    lines.push(
+      row(
+        'Requests % change (last vs previous day)',
+        Number(stats.totalDocumentRequested?.percentageChangeFromLastData ?? 0).toFixed(2)
+      )
+    );
+
+    lines.push('');
+    lines.push(row('Daily document line items requested'));
+    lines.push(row('Date', 'Count'));
+    sortedRequestDates.forEach((date) => lines.push(row(date, byDate[date])));
+
+    const revenueByDay = [...(stats.totalRevenue?.dailyRevenueData ?? [])].sort((a, b) =>
+      a.date.localeCompare(b.date)
+    );
+    lines.push('');
+    lines.push(row('Daily revenue (PHP, paid line items)'));
+    lines.push(row('Date', 'Revenue'));
+    revenueByDay.forEach((d) => lines.push(row(d.date, Number(d.revenue).toFixed(2))));
+
+    lines.push('');
+    lines.push(row('Recent paid transactions (up to 500)'));
+    lines.push(row('Reference number', 'Paid at (UTC)', 'Student name', 'Student no', 'Total amount (PHP)'));
+    for (const p of recentPaid) {
+      const ui = p.RequestDocuments?.users?.UserInformation;
+      const studentName = ui
+        ? `${ui.lastName}, ${ui.firstName}${ui.middleName ? ` ${ui.middleName}` : ''}`
+        : '';
+      lines.push(
+        row(
+          p.referenceNumber,
+          p.createdAt.toISOString(),
+          studentName,
+          ui?.studentNo ?? '',
+          p.totalAmount != null ? Number(p.totalAmount).toFixed(2) : ''
+        )
+      );
+    }
+
+    return { content: lines.join('\r\n') };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : 'Export failed.';
+    return { content: '', error: msg };
   }
 }
 

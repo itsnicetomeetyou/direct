@@ -73,8 +73,7 @@ function getDateThreshold(range: TimeRange): Date {
 
 export function BarGraph({
   chartData,
-  documentTypes,
-  transactions
+  transactionListDocuments
 }: {
   chartData: Array<{
     date: string;
@@ -83,12 +82,13 @@ export function BarGraph({
     documentType: string;
     transactionRef?: string;
   }>;
-  documentTypes: string[];
-  transactions: string[];
+  /** All document names from Transaction List (/dashboard/documents) */
+  transactionListDocuments: string[];
 }) {
   const [timeRange, setTimeRange] = React.useState<TimeRange>('1month');
   const [statusFilter, setStatusFilter] = React.useState<string>('ALL');
-  const [transactionFilter, setTransactionFilter] = React.useState<string>('ALL');
+  /** Filter by document type from the transaction list catalog */
+  const [documentFilter, setDocumentFilter] = React.useState<string>('ALL');
 
   const filteredData = React.useMemo(() => {
     const threshold = getDateThreshold(timeRange);
@@ -99,8 +99,8 @@ export function BarGraph({
       data = data.filter((item) => item.status === statusFilter);
     }
 
-    if (transactionFilter !== 'ALL') {
-      data = data.filter((item) => (item.transactionRef ?? '') === transactionFilter);
+    if (documentFilter !== 'ALL') {
+      data = data.filter((item) => item.documentType === documentFilter);
     }
 
     const aggregated: Record<string, number> = {};
@@ -111,7 +111,7 @@ export function BarGraph({
     return Object.entries(aggregated)
       .map(([date, totalRequests]) => ({ date, totalRequests }))
       .sort((a, b) => a.date.localeCompare(b.date));
-  }, [chartData, timeRange, statusFilter, transactionFilter]);
+  }, [chartData, timeRange, statusFilter, documentFilter]);
 
   const total = React.useMemo(
     () => ({
@@ -153,15 +153,15 @@ export function BarGraph({
             </SelectContent>
           </Select>
 
-          <Select value={transactionFilter} onValueChange={setTransactionFilter}>
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="All Transactions" />
+          <Select value={documentFilter} onValueChange={setDocumentFilter}>
+            <SelectTrigger className="w-[220px]">
+              <SelectValue placeholder="All documents" />
             </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="ALL">All Transactions</SelectItem>
-              {transactions.map((t) => (
-                <SelectItem key={t} value={t}>
-                  {t}
+            <SelectContent className="max-h-[280px]">
+              <SelectItem value="ALL">All documents (transaction list)</SelectItem>
+              {transactionListDocuments.map((name) => (
+                <SelectItem key={name} value={name}>
+                  {name}
                 </SelectItem>
               ))}
             </SelectContent>
