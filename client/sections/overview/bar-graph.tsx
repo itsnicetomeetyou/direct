@@ -73,19 +73,22 @@ function getDateThreshold(range: TimeRange): Date {
 
 export function BarGraph({
   chartData,
-  documentTypes
+  documentTypes,
+  transactions
 }: {
   chartData: Array<{
     date: string;
     totalRequests: number;
     status: string;
     documentType: string;
+    transactionRef?: string;
   }>;
   documentTypes: string[];
+  transactions: string[];
 }) {
   const [timeRange, setTimeRange] = React.useState<TimeRange>('1month');
   const [statusFilter, setStatusFilter] = React.useState<string>('ALL');
-  const [docTypeFilter, setDocTypeFilter] = React.useState<string>('ALL');
+  const [transactionFilter, setTransactionFilter] = React.useState<string>('ALL');
 
   const filteredData = React.useMemo(() => {
     const threshold = getDateThreshold(timeRange);
@@ -96,8 +99,8 @@ export function BarGraph({
       data = data.filter((item) => item.status === statusFilter);
     }
 
-    if (docTypeFilter !== 'ALL') {
-      data = data.filter((item) => item.documentType === docTypeFilter);
+    if (transactionFilter !== 'ALL') {
+      data = data.filter((item) => (item.transactionRef ?? '') === transactionFilter);
     }
 
     const aggregated: Record<string, number> = {};
@@ -108,7 +111,7 @@ export function BarGraph({
     return Object.entries(aggregated)
       .map(([date, totalRequests]) => ({ date, totalRequests }))
       .sort((a, b) => a.date.localeCompare(b.date));
-  }, [chartData, timeRange, statusFilter, docTypeFilter]);
+  }, [chartData, timeRange, statusFilter, transactionFilter]);
 
   const total = React.useMemo(
     () => ({
@@ -150,15 +153,15 @@ export function BarGraph({
             </SelectContent>
           </Select>
 
-          <Select value={docTypeFilter} onValueChange={setDocTypeFilter}>
+          <Select value={transactionFilter} onValueChange={setTransactionFilter}>
             <SelectTrigger className="w-[200px]">
               <SelectValue placeholder="All Transactions" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="ALL">All Transactions</SelectItem>
-              {documentTypes.map((dt) => (
-                <SelectItem key={dt} value={dt}>
-                  {dt}
+              {transactions.map((t) => (
+                <SelectItem key={t} value={t}>
+                  {t}
                 </SelectItem>
               ))}
             </SelectContent>

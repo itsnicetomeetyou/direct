@@ -128,6 +128,7 @@ export default async function OverViewPage() {
                 <BarGraph
                   chartData={getStats?.totalDocumentRequested?.dailyRequestData || []}
                   documentTypes={getStats?.totalDocumentRequested?.allDocumentTypes || []}
+                  transactions={getStats?.totalDocumentRequested?.allTransactions || []}
                 />
               </div>
               <Card className="col-span-4 md:col-span-3">

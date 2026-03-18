@@ -31,8 +31,14 @@ async function totalDocumentRequested() {
   try {
     const totalRequested = await prisma.requestDocuments.findMany({
       select: {
+        id: true,
         createdAt: true,
         status: true,
+        documentPayment: {
+          select: {
+            referenceNumber: true
+          }
+        },
         DocumentSelected: {
           select: {
             document: {
@@ -45,19 +51,23 @@ async function totalDocumentRequested() {
 
     const dailyRequestMap: Record<
       string,
-      { date: string; status: string; documentType: string; totalRequests: number }
+      { date: string; status: string; documentType: string; transactionRef: string; totalRequests: number }
     > = {};
+
+    const transactionSet = new Set<string>();
 
     totalRequested.forEach((doc) => {
       const date = doc.createdAt.toISOString().split('T')[0];
       const status = doc.status ?? 'PENDING';
+      const transactionRef = doc.documentPayment?.referenceNumber ?? doc.id;
+      transactionSet.add(transactionRef);
       const docNames = doc.DocumentSelected.map((ds) => ds.document.name);
       const uniqueNames = docNames.length > 0 ? Array.from(new Set(docNames)) : ['Unknown'];
 
       uniqueNames.forEach((docType) => {
-        const key = `${date}__${status}__${docType}`;
+        const key = `${date}__${status}__${docType}__${transactionRef}`;
         if (!dailyRequestMap[key]) {
-          dailyRequestMap[key] = { date, status, documentType: docType, totalRequests: 0 };
+          dailyRequestMap[key] = { date, status, documentType: docType, transactionRef, totalRequests: 0 };
         }
         dailyRequestMap[key].totalRequests += 1;
       });
@@ -66,6 +76,7 @@ async function totalDocumentRequested() {
     const dailyRequestData = Object.values(dailyRequestMap);
 
     const allDocumentTypes = Array.from(new Set(dailyRequestData.map((d) => d.documentType))).sort();
+    const allTransactions = Array.from(transactionSet).sort();
 
     const dailyTotalsMap: Record<string, number> = {};
     dailyRequestData.forEach(({ date, totalRequests }) => {
@@ -86,6 +97,7 @@ async function totalDocumentRequested() {
     return {
       dailyRequestData,
       allDocumentTypes,
+      allTransactions,
       percentageChangeFromLastData,
       totalRequested: totalRequested.length
     };
