@@ -210,17 +210,131 @@ export async function fetchDocumentRequest({ page, limit, search, status }: Fetc
   });
 
   const totalDocumentsRequest = await prisma.requestDocuments.count({
-    where: {
-      ...(search && { id: { contains: search } }),
-      ...(status && {
-        status: {
-          in: status.split('.').map((s) => RequestDocumentsStatus[s as keyof typeof RequestDocumentsStatus])
-        }
-      })
-    }
+    where: whereClause
   });
   return {
     documentsRequest,
     totalDocumentsRequest
   };
+}
+
+const MAX_CSV_EXPORT_ROWS = 50_000;
+
+export type CsvOrderRow = {
+  id: string;
+  referenceNumber: string;
+  createdAt: string;
+  selectedSchedule: string;
+  status: string;
+  deliverOptions: string;
+  studentNo: string;
+  studentName: string;
+  collegeDepartment: string;
+  course: string;
+  documents: string;
+  totalAmount: number | '';
+};
+
+/** All orders matching filters (up to MAX_CSV_EXPORT_ROWS) for CSV download — not paginated. */
+export async function exportDocumentRequestsForCsv(params: {
+  search?: string | null;
+  status?: string | null;
+}): Promise<CsvOrderRow[]> {
+  const search = params.search?.trim() || null;
+  const status = params.status?.trim() || null;
+
+  const whereClause: Prisma.RequestDocumentsWhereInput = {
+    ...(search && {
+      OR: [
+        { users: { UserInformation: { firstName: { contains: search } } } },
+        { users: { UserInformation: { lastName: { contains: search } } } }
+      ]
+    }),
+    ...(status && {
+      status: {
+        in: status.split('.').map((s) => RequestDocumentsStatus[s as keyof typeof RequestDocumentsStatus])
+      }
+    })
+  };
+
+  const USER_INFO_SELECT_BASE = {
+    id: true,
+    firstName: true,
+    middleName: true,
+    lastName: true,
+    studentNo: true,
+    specialOrder: true,
+    lrn: true,
+    address: true,
+    userId: true,
+    createdAt: true,
+    updatedAt: true,
+    phoneNo: true,
+    birthDate: true
+  } as const;
+
+  const USER_INFO_SELECT_WITH_ACADEMIC = {
+    ...USER_INFO_SELECT_BASE,
+    collegeDepartment: true,
+    course: true
+  } as const;
+
+  async function fetchForExport(includeAcademic: boolean) {
+    return prisma.requestDocuments.findMany({
+      where: whereClause,
+      include: {
+        documentPayment: true,
+        users: {
+          include: {
+            UserInformation: {
+              select: includeAcademic ? USER_INFO_SELECT_WITH_ACADEMIC : USER_INFO_SELECT_BASE
+            }
+          }
+        },
+        DocumentSelected: {
+          include: { document: true }
+        }
+      },
+      orderBy: { createdAt: 'desc' },
+      take: MAX_CSV_EXPORT_ROWS
+    });
+  }
+
+  let orders = await fetchForExport(true).catch(async (err) => {
+    const message = err instanceof Error ? err.message : String(err);
+    if (/Unknown column/i.test(message) && /(collegeDepartment|course)/i.test(message)) {
+      return fetchForExport(false);
+    }
+    throw err;
+  });
+
+  return orders.map((order) => {
+    const ui = order.users?.UserInformation;
+    const studentName = ui
+      ? `${ui.lastName}, ${ui.firstName}${ui.middleName ? ` ${ui.middleName}` : ''}`
+      : '';
+    const docs = (order.DocumentSelected ?? [])
+      .map((ds) => ds?.document?.name ?? '')
+      .filter(Boolean)
+      .join('; ');
+    const total =
+      order.documentPayment?.totalAmount !== null && order.documentPayment?.totalAmount !== undefined
+        ? Number(order.documentPayment.totalAmount)
+        : ('' as const);
+
+    return {
+      id: order.id,
+      referenceNumber: order.documentPayment?.referenceNumber ?? '',
+      createdAt: order.createdAt.toISOString(),
+      selectedSchedule: order.selectedSchedule ? order.selectedSchedule.toISOString() : '',
+      status: order.status ?? '',
+      deliverOptions: order.deliverOptions ?? '',
+      studentNo: ui?.studentNo ?? '',
+      studentName,
+      collegeDepartment: (ui as { collegeDepartment?: string | null })?.collegeDepartment ?? '',
+      course: (ui as { course?: string | null })?.course ?? '',
+      documents: docs,
+      totalAmount: total
+    };
+  });
 }

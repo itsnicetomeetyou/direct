@@ -8,9 +8,14 @@ import { useRequestTableFilters } from './use-request-table-filters';
 import { DataTableFilterBox } from '@/components/ui/table/data-table-filter-box';
 import { RequestDocumentsStatus } from '@prisma/client';
 import { Button } from '@/components/ui/button';
+import { useToast } from '@/components/ui/use-toast';
+import { exportDocumentRequestsForCsv } from '@/server/document';
 import moment from 'moment';
+import { useState } from 'react';
 
 export default function RequestTable({ data, totalData }: { data: Array<TDocumentRequest>; totalData: number }) {
+  const { toast } = useToast();
+  const [csvLoading, setCsvLoading] = useState(false);
   const { isAnyFilterActive, resetFilters, searchQuery, setPage, setSearchQuery, setStatusFilter, statusFilter } =
     useRequestTableFilters();
 
@@ -21,62 +26,75 @@ export default function RequestTable({ data, totalData }: { data: Array<TDocumen
     return needsQuotes ? `"${escaped}"` : escaped;
   }
 
-  function downloadCsv() {
-    const header = [
-      'Order ID',
-      'Reference Number',
-      'Request Date',
-      'Appointment Date',
-      'Status',
-      'Delivery Option',
-      'Student No',
-      'Student Name',
-      'College Department',
-      'Course',
-      'Documents',
-      'Total Amount'
-    ];
+  async function downloadCsv() {
+    setCsvLoading(true);
+    try {
+      const rows = await exportDocumentRequestsForCsv({
+        search: searchQuery || null,
+        status: statusFilter || null
+      });
 
-    const rows = data.map((order) => {
-      const ui = order.users?.UserInformation;
-      const studentName = ui ? `${ui.lastName}, ${ui.firstName}${ui.middleName ? ` ${ui.middleName}` : ''}` : '';
-      const docs = (order.DocumentSelected ?? [])
-        .map((ds) => ds?.document?.name ?? '')
-        .filter(Boolean)
-        .join('; ');
+      const header = [
+        'Order ID',
+        'Reference Number',
+        'Request Date',
+        'Appointment Date',
+        'Status',
+        'Delivery Option',
+        'Student No',
+        'Student Name',
+        'College Department',
+        'Course',
+        'Documents',
+        'Total Amount'
+      ];
 
-      const totalAmount =
-        order.documentPayment?.totalAmount !== null && order.documentPayment?.totalAmount !== undefined
-          ? Number(order.documentPayment.totalAmount)
-          : '';
+      const csvRows = rows.map((order) =>
+        [
+          order.id,
+          order.referenceNumber,
+          order.createdAt ? moment(order.createdAt).format('YYYY-MM-DD HH:mm:ss') : '',
+          order.selectedSchedule ? moment(order.selectedSchedule).format('YYYY-MM-DD') : '',
+          order.status,
+          order.deliverOptions,
+          order.studentNo,
+          order.studentName,
+          order.collegeDepartment,
+          order.course,
+          order.documents,
+          order.totalAmount
+        ].map(csvEscape)
+      );
 
-      return [
-        order.id,
-        order.documentPayment?.referenceNumber ?? '',
-        order.createdAt ? moment(order.createdAt).format('YYYY-MM-DD HH:mm:ss') : '',
-        order.selectedSchedule ? moment(order.selectedSchedule).format('YYYY-MM-DD') : '',
-        order.status ?? '',
-        order.deliverOptions ?? '',
-        ui?.studentNo ?? '',
-        studentName,
-        (ui as any)?.collegeDepartment ?? '',
-        (ui as any)?.course ?? '',
-        docs,
-        totalAmount
-      ].map(csvEscape);
-    });
+      const csv = [header.map(csvEscape).join(','), ...csvRows.map((r) => r.join(','))].join('\r\n');
+      const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const date = moment().format('YYYY-MM-DD');
+      a.href = url;
+      a.download = `order-list-${date}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
 
-    const csv = [header.map(csvEscape).join(','), ...rows.map((r) => r.join(','))].join('\r\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    const date = moment().format('YYYY-MM-DD');
-    a.href = url;
-    a.download = `order-list-${date}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
+      toast({
+        title: 'CSV downloaded',
+        description:
+          rows.length >= 50_000
+            ? `Exported first 50,000 orders (apply filters to narrow).`
+            : `${rows.length} order${rows.length === 1 ? '' : 's'} exported.`
+      });
+    } catch (e) {
+      console.error(e);
+      toast({
+        variant: 'destructive',
+        title: 'Download failed',
+        description: 'Could not export orders. Please try again.'
+      });
+    } finally {
+      setCsvLoading(false);
+    }
   }
 
   return (
@@ -95,8 +113,8 @@ export default function RequestTable({ data, totalData }: { data: Array<TDocumen
         />
         <DataTableResetFilter isFilterActive={isAnyFilterActive} onReset={resetFilters} />
         <div className="ml-auto">
-          <Button variant="outline" onClick={downloadCsv}>
-            Download CSV
+          <Button variant="outline" onClick={downloadCsv} disabled={csvLoading}>
+            {csvLoading ? 'Exporting…' : 'Download CSV'}
           </Button>
         </div>
       </div>

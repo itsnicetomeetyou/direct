@@ -392,12 +392,27 @@ export async function mobileSaveUserInfo(data: {
     const middleName = middleNameInput;
     const specialOrder = specialOrderInput;
 
-    await prisma.$executeRaw(
-      Prisma.sql`
-        INSERT INTO UserInformation (id, firstName, middleName, lastName, studentNo, specialOrder, lrn, address, userId, createdAt, updatedAt, phoneNo, birthDate)
-        VALUES (${id}, ${firstName}, ${middleName}, ${lastName}, ${studentNo}, ${specialOrder}, ${null}, ${address}, ${session.id}, NOW(), NOW(), ${phoneNo}, ${birthDateVal})
-      `
-    );
+    // Persist collegeDepartment + course so admin order CSV can read them from UserInformation
+    try {
+      await prisma.$executeRaw(
+        Prisma.sql`
+          INSERT INTO UserInformation (id, firstName, middleName, lastName, studentNo, specialOrder, lrn, address, userId, createdAt, updatedAt, phoneNo, birthDate, collegeDepartment, course)
+          VALUES (${id}, ${firstName}, ${middleName}, ${lastName}, ${studentNo}, ${specialOrder}, ${null}, ${address}, ${session.id}, NOW(), NOW(), ${phoneNo}, ${birthDateVal}, ${collegeDepartment}, ${course})
+        `
+      );
+    } catch (insertErr) {
+      const msg = insertErr instanceof Error ? insertErr.message : String(insertErr);
+      if (/Unknown column/i.test(msg) && /(collegeDepartment|course)/i.test(msg)) {
+        await prisma.$executeRaw(
+          Prisma.sql`
+            INSERT INTO UserInformation (id, firstName, middleName, lastName, studentNo, specialOrder, lrn, address, userId, createdAt, updatedAt, phoneNo, birthDate)
+            VALUES (${id}, ${firstName}, ${middleName}, ${lastName}, ${studentNo}, ${specialOrder}, ${null}, ${address}, ${session.id}, NOW(), NOW(), ${phoneNo}, ${birthDateVal})
+          `
+        );
+      } else {
+        throw insertErr;
+      }
+    }
 
     return { success: true };
   } catch (err) {
