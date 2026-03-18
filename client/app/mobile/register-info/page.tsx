@@ -94,8 +94,22 @@ export default function MobileRegisterInfoPage() {
     setForm((prev) => ({ ...prev, [key]: value }));
 
   const canGoNext = () => {
-    if (step === 0) return form.firstName && form.lastName && form.phoneNo && form.address && form.birthDate;
-    if (step === 1) return form.studentNo && form.collegeDepartment && form.course;
+    if (step === 0)
+      return (
+        form.firstName &&
+        form.middleName &&
+        form.lastName &&
+        form.phoneNo &&
+        form.address &&
+        form.birthDate
+      );
+    if (step === 1)
+      return (
+        form.studentNo &&
+        form.collegeDepartment &&
+        form.course &&
+        (form.specialOrder === 'YES' || form.specialOrder === 'NO')
+      );
     return true;
   };
 
@@ -148,7 +162,7 @@ export default function MobileRegisterInfoPage() {
         {step === 0 && (
           <div className="space-y-3">
             <Input placeholder="First Name *" value={form.firstName} onChange={(e) => update('firstName', e.target.value)} className="h-11 rounded-lg bg-muted/50" required />
-            <Input placeholder="Middle Name" value={form.middleName} onChange={(e) => update('middleName', e.target.value)} className="h-11 rounded-lg bg-muted/50" />
+            <Input placeholder="Middle Name *" value={form.middleName} onChange={(e) => update('middleName', e.target.value)} className="h-11 rounded-lg bg-muted/50" required />
             <Input placeholder="Last Name *" value={form.lastName} onChange={(e) => update('lastName', e.target.value)} className="h-11 rounded-lg bg-muted/50" required />
             <Input placeholder="Phone Number *" value={form.phoneNo} onChange={(e) => update('phoneNo', e.target.value)} className="h-11 rounded-lg bg-muted/50" required />
             <div>
@@ -218,9 +232,9 @@ export default function MobileRegisterInfoPage() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => update('specialOrder', '')}
+                  onClick={() => update('specialOrder', 'NO')}
                   className={`flex-1 rounded-lg border-2 px-4 py-2.5 text-sm font-medium transition-colors ${
-                    form.specialOrder === ''
+                    form.specialOrder === 'NO'
                       ? 'border-blue-500 bg-blue-50 text-blue-700'
                       : 'border-gray-200 bg-muted/50 text-gray-600 hover:border-gray-300'
                   }`}

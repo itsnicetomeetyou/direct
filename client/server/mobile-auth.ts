@@ -347,6 +347,35 @@ export async function mobileSaveUserInfo(data: {
   course?: string;
 }) {
   try {
+    // Validate required fields (server-side)
+    const firstName = data.firstName?.trim();
+    const middleNameInput = data.middleName?.trim();
+    const lastName = data.lastName?.trim();
+    const studentNoInput = data.studentNo?.trim();
+    const address = data.address?.trim();
+    const phoneNo = data.phoneNo?.trim();
+    const birthDateInput = data.birthDate?.trim();
+    const collegeDepartment = data.collegeDepartment?.trim();
+    const course = data.course?.trim();
+    const specialOrderInput = data.specialOrder?.trim();
+
+    if (
+      !firstName ||
+      !middleNameInput ||
+      !lastName ||
+      !studentNoInput ||
+      !address ||
+      !phoneNo ||
+      !birthDateInput ||
+      !collegeDepartment ||
+      !course
+    ) {
+      return { error: 'Please complete all required fields.' };
+    }
+    if (specialOrderInput !== 'YES' && specialOrderInput !== 'NO') {
+      return { error: 'Please select whether you are a graduate.' };
+    }
+
     const session = await getMobileSession();
     if (!session) return { error: 'Not authenticated.' };
 
@@ -358,17 +387,15 @@ export async function mobileSaveUserInfo(data: {
     if (existing) return { error: 'User information already exists.' };
 
     const id = randomUUID();
-    const birthDateVal = data.birthDate
-      ? new Date(data.birthDate).toISOString().slice(0, 10)
-      : null;
-    const studentNo = data.studentNo.trim();
-    const middleName = data.middleName?.trim() || null;
-    const specialOrder = data.specialOrder?.trim() || null;
+    const birthDateVal = birthDateInput ? new Date(birthDateInput).toISOString().slice(0, 10) : null;
+    const studentNo = studentNoInput;
+    const middleName = middleNameInput;
+    const specialOrder = specialOrderInput;
 
     await prisma.$executeRaw(
       Prisma.sql`
         INSERT INTO UserInformation (id, firstName, middleName, lastName, studentNo, specialOrder, lrn, address, userId, createdAt, updatedAt, phoneNo, birthDate)
-        VALUES (${id}, ${data.firstName}, ${middleName}, ${data.lastName}, ${studentNo}, ${specialOrder}, ${null}, ${data.address}, ${session.id}, NOW(), NOW(), ${data.phoneNo}, ${birthDateVal})
+        VALUES (${id}, ${firstName}, ${middleName}, ${lastName}, ${studentNo}, ${specialOrder}, ${null}, ${address}, ${session.id}, NOW(), NOW(), ${phoneNo}, ${birthDateVal})
       `
     );
 
