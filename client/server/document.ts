@@ -12,6 +12,42 @@ interface FetchDocumentsParams {
   status?: string | null;
 }
 
+const USER_INFO_ACADEMIC_CHUNK = 800;
+
+/**
+ * collegeDepartment & course from UserInformation (saved on mobile registration).
+ * Chunked for large CSV exports. Returns empty strings if columns are missing on DB.
+ */
+async function getUserInformationAcademicByUserIds(
+  userIds: string[]
+): Promise<Map<string, { collegeDepartment: string; course: string }>> {
+  const unique = Array.from(new Set(userIds.filter(Boolean)));
+  const map = new Map<string, { collegeDepartment: string; course: string }>();
+  if (unique.length === 0) return map;
+
+  for (let i = 0; i < unique.length; i += USER_INFO_ACADEMIC_CHUNK) {
+    const slice = unique.slice(i, i + USER_INFO_ACADEMIC_CHUNK);
+    try {
+      const rows = await prisma.userInformation.findMany({
+        where: { userId: { in: slice } },
+        select: { userId: true, collegeDepartment: true, course: true }
+      });
+      for (const r of rows) {
+        map.set(r.userId, {
+          collegeDepartment: (r.collegeDepartment ?? '').trim(),
+          course: (r.course ?? '').trim()
+        });
+      }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      if (/Unknown column/i.test(msg)) break;
+      console.error('[getUserInformationAcademicByUserIds]', e);
+      break;
+    }
+  }
+  return map;
+}
+
 export async function fetchDocuments({ page, limit, search }: FetchDocumentsParams) {
   const skip = (page - 1) * limit;
 
@@ -183,6 +219,30 @@ export async function fetchDocumentRequest({ page, limit, search, status }: Fetc
     throw err;
   });
 
+  const academicByUser = await getUserInformationAcademicByUserIds(
+    documentsRequest.map((d) => d.usersId)
+  );
+  documentsRequest = documentsRequest.map((doc) => {
+    if (!doc.users?.UserInformation) return doc;
+    const fromDb = academicByUser.get(doc.usersId);
+    const ui = doc.users.UserInformation as {
+      collegeDepartment?: string | null;
+      course?: string | null;
+    };
+    return {
+      ...doc,
+      users: {
+        ...doc.users,
+        UserInformation: {
+          ...doc.users.UserInformation,
+          collegeDepartment:
+            fromDb !== undefined ? fromDb.collegeDepartment : (ui.collegeDepartment ?? '').toString().trim(),
+          course: fromDb !== undefined ? fromDb.course : (ui.course ?? '').toString().trim()
+        }
+      }
+    };
+  });
+
   documentsRequest.map(async (column) => {
     if (column.deliverOptions === 'LALAMOVE' && column.status === 'OUTFORDELIVERY') {
       if (column.logisticOrderId) {
@@ -257,7 +317,7 @@ export async function exportDocumentRequestsForCsv(params: {
     })
   };
 
-  const USER_INFO_SELECT_BASE = {
+  const USER_INFO_SELECT_EXPORT = {
     id: true,
     firstName: true,
     middleName: true,
@@ -273,40 +333,24 @@ export async function exportDocumentRequestsForCsv(params: {
     birthDate: true
   } as const;
 
-  const USER_INFO_SELECT_WITH_ACADEMIC = {
-    ...USER_INFO_SELECT_BASE,
-    collegeDepartment: true,
-    course: true
-  } as const;
-
-  async function fetchForExport(includeAcademic: boolean) {
-    return prisma.requestDocuments.findMany({
-      where: whereClause,
-      include: {
-        documentPayment: true,
-        users: {
-          include: {
-            UserInformation: {
-              select: includeAcademic ? USER_INFO_SELECT_WITH_ACADEMIC : USER_INFO_SELECT_BASE
-            }
-          }
-        },
-        DocumentSelected: {
-          include: { document: true }
+  const orders = await prisma.requestDocuments.findMany({
+    where: whereClause,
+    include: {
+      documentPayment: true,
+      users: {
+        include: {
+          UserInformation: { select: USER_INFO_SELECT_EXPORT }
         }
       },
-      orderBy: { createdAt: 'desc' },
-      take: MAX_CSV_EXPORT_ROWS
-    });
-  }
-
-  let orders = await fetchForExport(true).catch(async (err) => {
-    const message = err instanceof Error ? err.message : String(err);
-    if (/Unknown column/i.test(message) && /(collegeDepartment|course)/i.test(message)) {
-      return fetchForExport(false);
-    }
-    throw err;
+      DocumentSelected: {
+        include: { document: true }
+      }
+    },
+    orderBy: { createdAt: 'desc' },
+    take: MAX_CSV_EXPORT_ROWS
   });
+
+  const academicByUser = await getUserInformationAcademicByUserIds(orders.map((o) => o.usersId));
 
   return orders.map((order) => {
     const ui = order.users?.UserInformation;
@@ -321,6 +365,7 @@ export async function exportDocumentRequestsForCsv(params: {
       order.documentPayment?.totalAmount !== null && order.documentPayment?.totalAmount !== undefined
         ? Number(order.documentPayment.totalAmount).toFixed(2)
         : '';
+    const acad = academicByUser.get(order.usersId);
 
     return {
       referenceNumber: order.documentPayment?.referenceNumber ?? '',
@@ -330,8 +375,8 @@ export async function exportDocumentRequestsForCsv(params: {
       deliverOptions: order.deliverOptions ?? '',
       studentNo: ui?.studentNo ?? '',
       studentName,
-      collegeDepartment: (ui as { collegeDepartment?: string | null })?.collegeDepartment ?? '',
-      course: (ui as { course?: string | null })?.course ?? '',
+      collegeDepartment: acad?.collegeDepartment ?? '',
+      course: acad?.course ?? '',
       documents: docs,
       totalAmount: total
     };
