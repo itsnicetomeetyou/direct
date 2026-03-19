@@ -194,98 +194,72 @@ function csvCell(v: unknown): string {
   return s;
 }
 
-/** Dashboard overview + daily stats + recent paid sales for CSV download */
+/**
+ * Dashboard CSV: (1) summary KPIs (2) requested document line items by date, status, document type.
+ */
 export async function exportDashboardCsv(): Promise<{ content: string; error?: string }> {
   try {
     const stats = await getStatistics();
     if (!stats) return { content: '', error: 'Could not load statistics.' };
 
-    const recentPaid = await prisma.documentPayment.findMany({
-      where: { status: 'PAID' },
-      orderBy: { createdAt: 'desc' },
-      take: 500,
-      include: {
-        RequestDocuments: {
-          include: {
-            users: {
-              include: {
-                UserInformation: {
-                  select: {
-                    firstName: true,
-                    middleName: true,
-                    lastName: true,
-                    studentNo: true
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    });
-
     const row = (...cells: unknown[]) => cells.map(csvCell).join(',');
     const lines: string[] = [];
 
-    const dailyReq = stats.totalDocumentRequested?.dailyRequestData ?? [];
-    const byDate: Record<string, number> = {};
-    dailyReq.forEach((d) => {
-      byDate[d.date] = (byDate[d.date] || 0) + d.totalRequests;
-    });
-    const sortedRequestDates = Object.keys(byDate).sort();
-
-    lines.push(row('DiReCT Dashboard Report'));
+    // ── Part 1: Requested documents — summary (matches dashboard cards) ──
+    lines.push(row('Requested documents — dashboard export'));
     lines.push(row('Generated (UTC)', new Date().toISOString()));
     lines.push('');
-    lines.push(row('Summary'));
+    lines.push(row('Part 1 — Summary'));
     lines.push(row('Metric', 'Value'));
     lines.push(row('Total revenue (PHP)', Number(stats.totalRevenue?.totalSelectedPrice ?? 0).toFixed(2)));
-    lines.push(
-      row(
-        'Revenue % change (last vs previous day with sales)',
-        Number(stats.totalRevenue?.percentageChangeFromLastData ?? 0).toFixed(2)
-      )
-    );
     lines.push(row('Total users', Number(stats.totalUsers ?? 0)));
-    lines.push(row('Total paid document orders (status PAID)', Number(stats.totalDocumentPaidRequested ?? 0)));
-    lines.push(row('Total document requests (orders)', Number(stats.totalDocumentRequested?.totalRequested ?? 0)));
-    lines.push(
-      row(
-        'Requests % change (last vs previous day)',
-        Number(stats.totalDocumentRequested?.percentageChangeFromLastData ?? 0).toFixed(2)
-      )
-    );
+    lines.push(row('Total paid documents', Number(stats.totalDocumentPaidRequested ?? 0)));
+    lines.push(row('Total document requested', Number(stats.totalDocumentRequested?.totalRequested ?? 0)));
+
+    // ── Part 2: By day, status, and document (line-item counts) ──
+    const dailyReq = stats.totalDocumentRequested?.dailyRequestData ?? [];
+    type RowKey = string;
+    const byDateStatus: Record<RowKey, number> = {};
+    const byDateStatusDoc: Record<RowKey, number> = {};
+
+    for (const d of dailyReq) {
+      const k1 = `${d.date}\u0001${d.status}`;
+      byDateStatus[k1] = (byDateStatus[k1] || 0) + d.totalRequests;
+      const k2 = `${d.date}\u0001${d.status}\u0001${d.documentType}`;
+      byDateStatusDoc[k2] = (byDateStatusDoc[k2] || 0) + d.totalRequests;
+    }
+
+    const sortKeys1 = Object.keys(byDateStatus).sort((a, b) => {
+      const [da, sa] = a.split('\u0001');
+      const [db, sb] = b.split('\u0001');
+      const c = da.localeCompare(db);
+      return c !== 0 ? c : sa.localeCompare(sb);
+    });
 
     lines.push('');
-    lines.push(row('Daily document line items requested'));
-    lines.push(row('Date', 'Count'));
-    sortedRequestDates.forEach((date) => lines.push(row(date, byDate[date])));
+    lines.push(row('Part 2 — Requested documents per day and status (totals)'));
+    lines.push(row('Date', 'Status', 'Line items'));
+    for (const k of sortKeys1) {
+      const [date, status] = k.split('\u0001');
+      lines.push(row(date, status, byDateStatus[k]));
+    }
 
-    const revenueByDay = [...(stats.totalRevenue?.dailyRevenueData ?? [])].sort((a, b) =>
-      a.date.localeCompare(b.date)
-    );
-    lines.push('');
-    lines.push(row('Daily revenue (PHP, paid line items)'));
-    lines.push(row('Date', 'Revenue'));
-    revenueByDay.forEach((d) => lines.push(row(d.date, Number(d.revenue).toFixed(2))));
+    const sortKeys2 = Object.keys(byDateStatusDoc).sort((a, b) => {
+      const pa = a.split('\u0001');
+      const pb = b.split('\u0001');
+      for (let i = 0; i < 3; i++) {
+        const c = pa[i].localeCompare(pb[i]);
+        if (c !== 0) return c;
+      }
+      return 0;
+    });
 
     lines.push('');
-    lines.push(row('Recent paid transactions (up to 500)'));
-    lines.push(row('Reference number', 'Paid at (UTC)', 'Student name', 'Student no', 'Total amount (PHP)'));
-    for (const p of recentPaid) {
-      const ui = p.RequestDocuments?.users?.UserInformation;
-      const studentName = ui
-        ? `${ui.lastName}, ${ui.firstName}${ui.middleName ? ` ${ui.middleName}` : ''}`
-        : '';
-      lines.push(
-        row(
-          p.referenceNumber,
-          p.createdAt.toISOString(),
-          studentName,
-          ui?.studentNo ?? '',
-          p.totalAmount != null ? Number(p.totalAmount).toFixed(2) : ''
-        )
-      );
+    lines.push(row('Part 2 — Detail by date, status, and document type'));
+    lines.push(row('Date', 'Status', 'Document', 'Line items'));
+    for (const k of sortKeys2) {
+      const [date, status, docType] = k.split('\u0001');
+      lines.push(row(date, status, docType, byDateStatusDoc[k]));
     }
 
     return { content: lines.join('\r\n') };
