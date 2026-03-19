@@ -604,6 +604,7 @@ export async function mobileGetDocuments() {
           { eligibility: 'BOTH' },
         ],
       },
+      orderBy: { name: 'asc' },
     });
 
     // Convert Decimal fields to numbers for serialization

@@ -65,12 +65,14 @@ export default function MobileRequestPage() {
       mobileGetHolidays(),
     ]).then(([docs, deliveryOpts, paymentOpts, config, hols]) => {
       setDocuments(
-        docs.map((d: any) => ({
-          id: d.id,
-          name: d.name,
-          price: d.price,
-          dayBeforeRelease: d.dayBeforeRelease ?? 3,
-        }))
+        docs
+          .map((d: any) => ({
+            id: d.id,
+            name: d.name,
+            price: d.price,
+            dayBeforeRelease: d.dayBeforeRelease ?? 3,
+          }))
+          .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }))
       );
       setDeliveryOptions(deliveryOpts);
       setPaymentOptions(paymentOpts);
@@ -408,6 +410,7 @@ export default function MobileRequestPage() {
           <div className="space-y-1">
             {documents
               .filter((d) => selectedDocs.includes(d.id))
+              .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }))
               .map((doc) => (
                 <div key={doc.id} className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">{doc.name}</span>
