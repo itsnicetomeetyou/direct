@@ -58,6 +58,8 @@ function up(s: string | null | undefined): string {
   return (s ?? '').toUpperCase();
 }
 
+const valueClass = 'col-span-3 text-sm font-bold uppercase';
+
 function TrackingProgress({
   status,
   deliverOptions
@@ -223,7 +225,7 @@ export default function ViewMoreModal(data: {
             <div className="space-y-2">
               {data.data.DocumentSelected.map((doc, index) => (
                 <div key={index} className="flex items-center justify-between rounded-lg border bg-gray-50 px-4 py-3">
-                  <span className="text-sm font-medium">{up(doc?.document?.name)}</span>
+                  <span className="text-sm font-medium uppercase">{up(doc?.document?.name)}</span>
                   {Number(doc?.document?.price ?? 0) > 0 && (
                     <span className="text-sm font-semibold text-gray-600">
                       {formatCurrency(Number(doc?.document?.price ?? 0))}
@@ -240,28 +242,28 @@ export default function ViewMoreModal(data: {
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label className="text-right">First name</Label>
-                <p className="col-span-3 text-sm font-bold">{up(data?.data?.users?.UserInformation?.firstName)}</p>
+                <p className={valueClass}>{up(data?.data?.users?.UserInformation?.firstName)}</p>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label className="text-right">Middle name</Label>
-                <p className="col-span-3 text-sm font-bold">{up(data?.data?.users?.UserInformation?.middleName)}</p>
+                <p className={valueClass}>{up(data?.data?.users?.UserInformation?.middleName)}</p>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label className="text-right">Last name</Label>
-                <p className="col-span-3 text-sm font-bold">{up(data?.data?.users?.UserInformation?.lastName)}</p>
+                <p className={valueClass}>{up(data?.data?.users?.UserInformation?.lastName)}</p>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label className="text-right">Student No.</Label>
-                <p className="col-span-3 text-sm font-bold">{up(data?.data?.users?.UserInformation?.studentNo)}</p>
+                <p className={valueClass}>{up(data?.data?.users?.UserInformation?.studentNo)}</p>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label className="text-right">Phone No.</Label>
-                <p className="col-span-3 text-sm font-bold">{up(data?.data?.users?.UserInformation?.phoneNo)}</p>
+                <p className={valueClass}>{up(data?.data?.users?.UserInformation?.phoneNo)}</p>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label className="text-right">Graduate</Label>
-                <p className="col-span-3 text-sm font-bold">
-                  {data?.data?.users?.UserInformation?.specialOrder ? 'YES' : 'NO'}
+                <p className={valueClass}>
+                  {up(data?.data?.users?.UserInformation?.specialOrder) === 'YES' ? 'YES' : 'NO'}
                 </p>
               </div>
             </div>
@@ -293,7 +295,7 @@ export default function ViewMoreModal(data: {
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label className="text-right">Reference No.</Label>
-                <p className="col-span-3 text-sm font-bold">{up(data?.data?.documentPayment?.referenceNumber)}</p>
+                <p className={valueClass}>{up(data?.data?.documentPayment?.referenceNumber)}</p>
               </div>
               {data.mode === 'EDIT' && (
                 <div className="grid grid-cols-4 items-center gap-4">
@@ -343,13 +345,13 @@ export default function ViewMoreModal(data: {
               )}
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label className="text-right">Delivery Options</Label>
-                <p className="col-span-3 text-sm font-bold">{up(data?.data?.deliverOptions)}</p>
+                <p className={valueClass}>{up(data?.data?.deliverOptions)}</p>
               </div>
 
               {data?.data?.selectedSchedule ? (
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label className="text-right">Appointment Date</Label>
-                  <p className="col-span-3 text-sm font-bold">
+                  <p className={valueClass}>
                     {up(moment(data?.data?.selectedSchedule).format('MMMM Do YYYY') || null)}
                   </p>
                 </div>
@@ -357,11 +359,11 @@ export default function ViewMoreModal(data: {
                 <>
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label className="text-right">Address</Label>
-                    <p className="col-span-3 text-sm font-bold">{up(data?.data?.address)}</p>
+                    <p className={valueClass}>{up(data?.data?.address)}</p>
                   </div>
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label className="text-right">Additional Address</Label>
-                    <p className="col-span-3 text-sm font-bold">{up(data?.data?.additionalAddress)}</p>
+                    <p className={valueClass}>{up(data?.data?.additionalAddress)}</p>
                   </div>
                 </>
               )}
