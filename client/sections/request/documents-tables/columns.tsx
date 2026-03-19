@@ -170,8 +170,13 @@ export const columns: ColumnDef<TDocumentRequest>[] = [
   {
     accessorKey: 'users',
     header: 'NAME',
-    cell: ({ row }) =>
-      `${row?.original?.users?.UserInformation?.lastName}, ${row?.original?.users?.UserInformation?.firstName}`
+    cell: ({ row }) => {
+      const ui = row?.original?.users?.UserInformation;
+      const name = ui
+        ? `${ui.lastName}, ${ui.firstName}${ui.middleName ? ` ${ui.middleName}` : ''}`
+        : '';
+      return name.toUpperCase();
+    }
   },
   {
     accessorKey: 'users.UserInformation.studentNo',
