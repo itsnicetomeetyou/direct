@@ -220,13 +220,10 @@ export async function exportDashboardCsv(): Promise<{ content: string; error?: s
     const dailyReq = stats.totalDocumentRequested?.dailyRequestData ?? [];
     type RowKey = string;
     const byDateStatus: Record<RowKey, number> = {};
-    const byDateStatusDoc: Record<RowKey, number> = {};
 
     for (const d of dailyReq) {
       const k1 = `${d.date}\u0001${d.status}`;
       byDateStatus[k1] = (byDateStatus[k1] || 0) + d.totalRequests;
-      const k2 = `${d.date}\u0001${d.status}\u0001${d.documentType}`;
-      byDateStatusDoc[k2] = (byDateStatusDoc[k2] || 0) + d.totalRequests;
     }
 
     const sortKeys1 = Object.keys(byDateStatus).sort((a, b) => {
@@ -244,22 +241,21 @@ export async function exportDashboardCsv(): Promise<{ content: string; error?: s
       lines.push(row(date, status, byDateStatus[k]));
     }
 
-    const sortKeys2 = Object.keys(byDateStatusDoc).sort((a, b) => {
-      const pa = a.split('\u0001');
-      const pb = b.split('\u0001');
-      for (let i = 0; i < 3; i++) {
-        const c = pa[i].localeCompare(pb[i]);
-        if (c !== 0) return c;
-      }
-      return 0;
+    const detailRows = [...dailyReq].sort((a, b) => {
+      const c = a.date.localeCompare(b.date);
+      if (c !== 0) return c;
+      const d = a.status.localeCompare(b.status);
+      if (d !== 0) return d;
+      const e = a.documentType.localeCompare(b.documentType);
+      if (e !== 0) return e;
+      return (a.transactionRef ?? '').localeCompare(b.transactionRef ?? '');
     });
 
     lines.push('');
     lines.push(row('Part 2 — Detail by date, status, and document type'));
-    lines.push(row('Date', 'Status', 'Document', 'Line items'));
-    for (const k of sortKeys2) {
-      const [date, status, docType] = k.split('\u0001');
-      lines.push(row(date, status, docType, byDateStatusDoc[k]));
+    lines.push(row('Date', 'Status', 'Document', 'Reference number', 'Line items'));
+    for (const d of detailRows) {
+      lines.push(row(d.date, d.status, d.documentType, d.transactionRef ?? '', d.totalRequests));
     }
 
     return { content: lines.join('\r\n') };
